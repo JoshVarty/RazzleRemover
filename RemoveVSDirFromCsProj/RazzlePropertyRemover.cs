@@ -32,7 +32,33 @@ namespace RemoveVSDirFromCsProj
                 "<GenerateAssemblyRefs>true</GenerateAssemblyRefs>",
                 "<SignAssemblyAttribute>true</SignAssemblyAttribute>",
                 @"<?xml version=""1.0"" encoding=""utf-8""?>",
+                @"<Import Project=""$(BuildPropsFile)"" Condition=""'$(BuildProps_Imported)'!='True' AND Exists('$(BuildPropsFile)')"" />",
+                @"<Import Project=""..\Platform.Settings.targets"" />",
+                @"<Import Project=""$(PlatformPath)\Tools\Targets\Platform.Settings.Selector.targets"" />",
+                "<!--Import the targets-->",
+                @"<Import Project=""$(PlatformPath)\Tools\Targets\Platform.Imports.targets"" />",
+                @"<BuildPropsFile>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Build.props))\Build.props</BuildPropsFile>",
+                @"<OutputPath>$(BinariesDirectory)\bin\$(BuildArchitecture)</OutputPath>",
+                @"<Import Project=""$(PartitionExports)"" />",
+                @"<GeneratedModuleVersion>15.0.0</GeneratedModuleVersion>",
 
+            };
+
+        private static Dictionary<string, string> StringsToReplace { get; } =
+            new Dictionary<string, string>()
+            {
+                {
+                    @"<Project ToolsVersion=""4.0"" DefaultTargets=""Build"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">",
+                    @"<Project Sdk=""Microsoft.NET.Sdk"">"
+                },
+                {
+                    "<OutputType>Library</OutputType>",
+                    "<TargetFramework>net45</TargetFramework>"
+                },
+                {
+                    "<TargetType>Library</TargetType>",
+                    "<TargetFramework>net45</TargetFramework>"
+                }
             };
 
         public RazzlePropertyRemover(string root = @"C:\git\VS")
@@ -66,6 +92,21 @@ namespace RemoveVSDirFromCsProj
                         fileContents = fileContents.Replace(lineToRemove, "");
                         File.WriteAllText(projFile, fileContents);
                         Console.WriteLine("Removed from: " + projFile);
+                    }
+                }
+            }
+
+            foreach (var lineToReplace in StringsToReplace)
+            {
+                foreach (var projFile in ProjectPaths)
+                {
+                    var fileContents = File.ReadAllText(projFile);
+                    if (fileContents.Contains(lineToReplace.Key))
+                    {
+                        //Replace contents
+                        fileContents = fileContents.Replace(lineToReplace.Key, lineToReplace.Value);
+                        File.WriteAllText(projFile, fileContents);
+                        Console.WriteLine("Replaced in: " + projFile);
                     }
                 }
             }
