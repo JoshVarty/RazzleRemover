@@ -31,6 +31,8 @@ namespace RemoveVSDirFromCsProj
                 "<Nonshipping>false</Nonshipping>",
                 "<GenerateAssemblyRefs>true</GenerateAssemblyRefs>",
                 "<SignAssemblyAttribute>true</SignAssemblyAttribute>",
+                @"<?xml version=""1.0"" encoding=""utf-8""?>",
+
             };
 
         public RazzlePropertyRemover(string root = @"C:\git\VS")
