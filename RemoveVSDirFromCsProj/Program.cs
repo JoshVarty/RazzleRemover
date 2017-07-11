@@ -12,6 +12,7 @@ namespace RemoveVSDirFromCsProj
     {
         static void Main(string[] args)
         {
+            string repoPath = @"C:\git\vsc";
             //var usingRemove = new PlatformUsingRemover();
             //usingRemove.FixUsings();
             //FindProjectUsing();
@@ -19,7 +20,7 @@ namespace RemoveVSDirFromCsProj
             //var externalReferencesRemover = new ExternalAPIRemover();
             //externalReferencesRemover.RemoveExternalAPIsAndPrintNuGets();
 
-            var propertyRemover = new RazzlePropertyRemover();
+            var propertyRemover = new RazzlePropertyRemover(repoPath);
             propertyRemover.RemoveRazzleProperties();
         }
     }

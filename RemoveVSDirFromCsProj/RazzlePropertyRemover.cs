@@ -29,6 +29,10 @@ namespace RemoveVSDirFromCsProj
                 " KeepDuplicates=\"false\"",
                 "<Nonshipping>true</Nonshipping>",
                 "<Nonshipping>false</Nonshipping>",
+                "<GenerateAssemblyRefs>true</GenerateAssemblyRefs>",
+                "<SignAssemblyAttribute>true</SignAssemblyAttribute>",
+                @"<?xml version=""1.0"" encoding=""utf-8""?>",
+
             };
 
         public RazzlePropertyRemover(string root = @"C:\git\VS")
@@ -51,15 +55,15 @@ namespace RemoveVSDirFromCsProj
 
         public void RemoveRazzleProperties()
         {
-            foreach (var suiteBin in PropertiesAndAttributesToRemove)
+            foreach (var lineToRemove in PropertiesAndAttributesToRemove)
             {
                 foreach (var projFile in ProjectPaths)
                 {
                     var fileContents = File.ReadAllText(projFile);
-                    if (fileContents.Contains(suiteBin))
+                    if (fileContents.Contains(lineToRemove))
                     {
                         //Replace contents
-                        fileContents = fileContents.Replace(suiteBin, "");
+                        fileContents = fileContents.Replace(lineToRemove, "");
                         File.WriteAllText(projFile, fileContents);
                         Console.WriteLine("Removed from: " + projFile);
                     }
