@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace RemoveVSDirFromCsProj
+namespace RazzleRemover
 {
     /// <summary>
     /// This class is meant to remove ExternalAPI references like: 
