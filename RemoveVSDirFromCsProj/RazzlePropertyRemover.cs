@@ -44,6 +44,8 @@ namespace RazzleRemover
             "Nonshipping",
             "SignAssemblyAttribute",
             "OutputPath",
+            "ProjectGuid",
+            "BuildArchitecturesAllowed"
         };
 
         private static Dictionary<string, string> StringsToReplace { get; } =
@@ -62,8 +64,8 @@ namespace RazzleRemover
                     "<TargetFramework>net45</TargetFramework>\r\n    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>\r\n    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>"
                 },
                 {
-                    "<HintPath>$(PkgTestPlatform_MSTest)\\v1\\lib\\net20\\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>",
-                    "<HintPath>$(RepoRoot)\\lib\\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>"
+                    "$(PlatformPath)",
+                    "$(RepoRoot)"
                 },
             };
 
@@ -82,7 +84,9 @@ namespace RazzleRemover
                 || n.Contains(@"Platform\Tools\")
                 || n.Contains(@"Platform\UserNotifications\")
                 || n.Contains(@"Platform\Utilities\")
-                || n.Contains(@"Platform\WER\"))).ToList().Take(5).ToList();
+                || n.Contains(@"Platform\WER\"))).
+                Where(n=> !n.Contains("VSEditor"))  //TODO: FIX VSEDITOR MANUALLY
+                .Take(10).ToList();
         }
 
         public void RemoveRazzleProperties()

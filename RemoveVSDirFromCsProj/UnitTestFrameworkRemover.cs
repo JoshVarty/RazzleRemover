@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 
 namespace RazzleRemover
 {
+    /// <summary>
+    /// Replaces a unit test reference found in PkgTestPlatform_MSTest with a proper NuGet reference.
+    /// It also adds a required reference to System.Runtime.
+    /// </summary>
     public class UnitTestFrameworkRemover
     {
         private string PlatformPath { get; }
@@ -16,7 +20,7 @@ namespace RazzleRemover
         private static string UnitTestReference { get; } =
 @"<Reference Include=""Microsoft.VisualStudio.QualityTools.UnitTestFramework"">
       <Private>true</Private>
-      <HintPath>$(PkgTestPlatform_MSTest)\\v1\\lib\\net20\\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
+      <HintPath>$(PkgTestPlatform_MSTest)\v1\lib\net20\Microsoft.VisualStudio.QualityTools.UnitTestFramework.dll</HintPath>
     </Reference>";
         private static string UnitTestNuGet = "MSTest.TestFramework";
 
@@ -36,7 +40,7 @@ namespace RazzleRemover
                 || n.Contains(@"Platform\Tools\")
                 || n.Contains(@"Platform\UserNotifications\")
                 || n.Contains(@"Platform\Utilities\")
-                || n.Contains(@"Platform\WER\"))).ToList().Take(5).ToList();
+                || n.Contains(@"Platform\WER\"))).ToList();
         }
 
         public void RemoveUnitTestFrameworkReferencesAndPrintNuGetScript()

@@ -16,14 +16,16 @@ namespace RazzleRemover
             //var usingRemove = new PlatformUsingRemover();
             //usingRemove.FixUsings();
             //FindProjectUsing();
-            
+
             //var externalReferencesRemover = new ExternalAPIRemover();
             //externalReferencesRemover.RemoveExternalAPIsAndPrintNuGets();
 
             var propertyRemover = new RazzlePropertyRemover();
             propertyRemover.RemoveRazzleProperties();
 
-            var x = new UnitTestFrameworkRemover
+            //var unitTestFrameworkRemover = new UnitTestFrameworkRemover();
+            //unitTestFrameworkRemover.RemoveUnitTestFrameworkReferencesAndPrintNuGetScript();
+            Console.ReadLine();
         }
     }
 }
