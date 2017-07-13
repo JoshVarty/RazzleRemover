@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace RemoveVSDirFromCsProj
+namespace RazzleRemover
 {
     class Program
     {
@@ -16,12 +16,16 @@ namespace RemoveVSDirFromCsProj
             //var usingRemove = new PlatformUsingRemover();
             //usingRemove.FixUsings();
             //FindProjectUsing();
-            
+
             //var externalReferencesRemover = new ExternalAPIRemover();
             //externalReferencesRemover.RemoveExternalAPIsAndPrintNuGets();
 
-            var propertyRemover = new RazzlePropertyRemover(repoPath);
+            var propertyRemover = new RazzlePropertyRemover();
             propertyRemover.RemoveRazzleProperties();
+
+            //var unitTestFrameworkRemover = new UnitTestFrameworkRemover();
+            //unitTestFrameworkRemover.RemoveUnitTestFrameworkReferencesAndPrintNuGetScript();
+            Console.ReadLine();
         }
     }
 }

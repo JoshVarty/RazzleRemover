@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 
-namespace RemoveVSDirFromCsProj
+namespace RazzleRemover
 {
     /// <summary>
     /// This class is meant to remove <CopyToSuiteBin>true</CopyToSuiteBin> MSBuild properties like:
@@ -20,17 +20,9 @@ namespace RemoveVSDirFromCsProj
         /// <summary>
         /// These are a bunch of Razzle related properties and attributes I want to remove entirely.
         /// </summary>
-        private static List<string> PropertiesAndAttributesToRemove { get; } =
+        private static List<string> StringToRemove { get; } =
             new List<string>()
             {
-                "<CopyToSuiteBin>true</CopyToSuiteBin>",
-                "<CopyToSuiteBin>false</CopyToSuiteBin>",
-                "<UseVsVersion>true</UseVsVersion>",
-                " KeepDuplicates=\"false\"",
-                "<Nonshipping>true</Nonshipping>",
-                "<Nonshipping>false</Nonshipping>",
-                "<GenerateAssemblyRefs>true</GenerateAssemblyRefs>",
-                "<SignAssemblyAttribute>true</SignAssemblyAttribute>",
                 @"<?xml version=""1.0"" encoding=""utf-8""?>",
                 @"<Import Project=""$(BuildPropsFile)"" Condition=""'$(BuildProps_Imported)'!='True' AND Exists('$(BuildPropsFile)')"" />",
                 @"<Import Project=""..\Platform.Settings.targets"" />",
@@ -38,8 +30,8 @@ namespace RemoveVSDirFromCsProj
                 "<!--Import the targets-->",
                 @"<Import Project=""$(PlatformPath)\Tools\Targets\Platform.Imports.targets"" />",
                 @"<BuildPropsFile>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildProjectDirectory), Build.props))\Build.props</BuildPropsFile>",
-                @"<OutputPath>$(BinariesDirectory)\bin\$(BuildArchitecture)</OutputPath>",
                 @"<Import Project=""$(PartitionExports)"" />",
+                " KeepDuplicates=\"false\"",
                 @"<GeneratedModuleVersion>15.0.0</GeneratedModuleVersion>",
                 @"<AssemblyAttributeClsCompliant>false</AssemblyAttributeClsCompliant>",
             };
@@ -53,6 +45,20 @@ namespace RemoveVSDirFromCsProj
                 }
             };
 
+        private static List<string> PropertiesToRemove { get; } = new List<string>()
+        {
+            "GeneratedModuleId",
+            "GeneratedModuleVersion",
+            "GenerateAssemblyRefs",
+            "CopyToSuiteBin",
+            "UseVsVersion",
+            "Nonshipping",
+            "SignAssemblyAttribute",
+            "OutputPath",
+            "ProjectGuid",
+            "BuildArchitecturesAllowed"
+        };
+
         private static Dictionary<string, string> StringsToReplace { get; } =
             new Dictionary<string, string>()
             {
@@ -62,12 +68,16 @@ namespace RemoveVSDirFromCsProj
                 },
                 {
                     "<OutputType>Library</OutputType>",
-                    "<TargetFramework>net45</TargetFramework>"
+                    "<TargetFramework>net45</TargetFramework>\r\n    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>\r\n    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>"
                 },
                 {
                     "<TargetType>Library</TargetType>",
-                    "<TargetFramework>net45</TargetFramework>"
-                }
+                    "<TargetFramework>net45</TargetFramework>\r\n    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>\r\n    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>"
+                },
+                {
+                    "$(PlatformPath)",
+                    "$(RepoRoot)"
+                },
             };
 
         public RazzlePropertyRemover(string root = @"C:\git\VS")
@@ -85,12 +95,14 @@ namespace RemoveVSDirFromCsProj
                 || n.Contains(@"Platform\Tools\")
                 || n.Contains(@"Platform\UserNotifications\")
                 || n.Contains(@"Platform\Utilities\")
-                || n.Contains(@"Platform\WER\"))).ToList();
+                || n.Contains(@"Platform\WER\"))).
+                Where(n=> !n.Contains("VSEditor"))  //TODO: FIX VSEDITOR MANUALLY
+                .Take(10).ToList();
         }
 
         public void RemoveRazzleProperties()
         {
-            foreach (var lineToRemove in PropertiesAndAttributesToRemove)
+            foreach (var lineToRemove in StringToRemove)
             {
                 foreach (var projFile in ProjectPaths)
                 {
@@ -99,6 +111,21 @@ namespace RemoveVSDirFromCsProj
                     {
                         //Replace contents
                         fileContents = fileContents.Replace(lineToRemove, "");
+                        File.WriteAllText(projFile, fileContents);
+                        Console.WriteLine("Removed from: " + projFile);
+                    }
+                }
+            }
+
+            foreach(var propertyToRemove in PropertiesToRemove)
+            {
+                foreach (var projFile in ProjectPaths)
+                {
+                    var fileContents = File.ReadAllText(projFile);
+                    if (fileContents.Contains(propertyToRemove))
+                    {
+                        //Replace contents
+                        fileContents = removePropertyAndContents(fileContents, propertyToRemove);
                         File.WriteAllText(projFile, fileContents);
                         Console.WriteLine("Removed from: " + projFile);
                     }
@@ -135,6 +162,30 @@ namespace RemoveVSDirFromCsProj
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes everything (including the property) between the start and end tag for a given property.
+        /// For example, it will remove anything like: 
+        ///         <GeneratedModuleId>Microsoft.VisualStudio.Language.Intellisense</GeneratedModuleId>
+        /// as well as:
+        ///         <GeneratedModuleId>Microsoft.VisualStudio.Text.Data</GeneratedModuleId>
+        /// </summary>
+        private string removePropertyAndContents(string fileContents, string property)
+        {
+            var startProperty = "<" + property + ">";
+            var endProperty = "</" + property + ">";
+            var start = fileContents.IndexOf(startProperty);
+            var end = fileContents.IndexOf(endProperty) + endProperty.Length;
+
+            while (start > -1 && end > -1 && end > start)
+            {
+                fileContents = fileContents.Remove(start, (end - start));
+                start = fileContents.IndexOf(startProperty);
+                end = fileContents.IndexOf(endProperty) + endProperty.Length;
+            }
+
+            return fileContents;
         }
     }
 }
