@@ -41,7 +41,16 @@ namespace RemoveVSDirFromCsProj
                 @"<OutputPath>$(BinariesDirectory)\bin\$(BuildArchitecture)</OutputPath>",
                 @"<Import Project=""$(PartitionExports)"" />",
                 @"<GeneratedModuleVersion>15.0.0</GeneratedModuleVersion>",
+                @"<AssemblyAttributeClsCompliant>false</AssemblyAttributeClsCompliant>",
+            };
 
+        private static Dictionary<string, Func<string, bool>> PropertiesToRemoveAndAct { get; } =
+            new Dictionary<string, Func<string, bool>>()
+            {
+                {
+                    @"<AssemblyAttributeClsCompliant>true</AssemblyAttributeClsCompliant>",
+                    (path) => AssemblyInfoModifier.AddClsCompliant(path)
+                }
             };
 
         private static Dictionary<string, string> StringsToReplace { get; } =
@@ -107,6 +116,22 @@ namespace RemoveVSDirFromCsProj
                         fileContents = fileContents.Replace(lineToReplace.Key, lineToReplace.Value);
                         File.WriteAllText(projFile, fileContents);
                         Console.WriteLine("Replaced in: " + projFile);
+                    }
+                }
+            }
+
+            foreach (var lineToRemoveAndAct in PropertiesToRemoveAndAct)
+            {
+                foreach (var projFile in ProjectPaths)
+                {
+                    var fileContents = File.ReadAllText(projFile);
+                    if (fileContents.Contains(lineToRemoveAndAct.Key))
+                    {
+                        //Replace contents
+                        fileContents = fileContents.Replace(lineToRemoveAndAct.Key, "");
+                        File.WriteAllText(projFile, fileContents);
+                        var modified = lineToRemoveAndAct.Value(projFile);
+                        Console.WriteLine("Removed from and " + (modified ? "modified: " : "not modified: ") + projFile);
                     }
                 }
             }
