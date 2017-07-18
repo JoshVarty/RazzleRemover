@@ -2,6 +2,7 @@
 using System.IO;
 using System.Diagnostics;
 using System.Text;
+using System.Linq;
 
 namespace ProjectTransformer
 {
@@ -60,11 +61,31 @@ namespace ProjectTransformer
                     var value = line.Substring("ProjectReferences:".Length);
                     data.ProjectReferences = value.Split(';');
                 }
-                else if (line.StartsWith("References:"))
+                else if (line.StartsWith("Reference:"))
                 {
-                    var value = line.Substring("References:".Length);
-                    data.NuGetReferences = value.Split(';');
-                }
+                    var value = line.Substring("Reference:".Length);
+                    if (value.TrimEnd().EndsWith(", HintPath="))
+                    {   // e.g: Reference:System;System.Core, HintPath=
+                        // These are system references
+                        value = value.Substring(0, value.Length-", HintPath=".Length);
+                        data.SdkReferences = value.Split(';');
+                    }
+                    else
+                    {   // e.g: Reference:Microsoft.VisualStudio.Validation, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture = MSIL, HintPath =..\..\..\..\Packages\Microsoft.VisualStudio.Validation.15.3.15\lib\net45\Microsoft.VisualStudio.Validation.dll
+                        var parts = value.Split(',');
+                        var name = parts[0];
+                        var hintPath = parts.Where(part => part.TrimStart().StartsWith("HintPath=")).FirstOrDefault();
+                        if (hintPath == null) throw new NotSupportedException();
+                        // Get the version name from the directory name of where nuget stores the binaries.
+                        var version = hintPath.Substring(hintPath.IndexOf(name) + name.Length + 1 /* for dot */);
+                        version = version.Substring(0, version.IndexOf('\\'));
+                        data.NuGetReferences.Add(new ProjectInfo.ProjectReference
+                        {
+                            Name = name,
+                            Version = version,
+                        });
+                    }
+}
                 else if (line.StartsWith("None:"))
                 {
                     var value = line.Substring("None:".Length);
@@ -95,7 +116,7 @@ namespace ProjectTransformer
             sb.AppendLine("  <ItemGroup>");
             foreach (var packageReference in projectData.NuGetReferences)
             {
-                sb.AppendLine($@"      <PackageReference Include=""{packageReference}"" Version=""{getVersionProperty(packageReference)}"" />");
+                sb.AppendLine($@"      <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
             }
             sb.AppendLine("  </ItemGroup>");
 
@@ -120,7 +141,7 @@ namespace ProjectTransformer
             }
             else
             {
-                return packageReference.Replace(".", String.Empty);
+                return "$(" + packageReference.Replace(".", String.Empty) + ")";
             }
         }
     }
