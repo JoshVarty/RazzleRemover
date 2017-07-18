@@ -114,6 +114,13 @@ namespace ProjectTransformer
   </PropertyGroup>");
 
             sb.AppendLine("  <ItemGroup>");
+            foreach (var sdkReference in projectData.SdkReferences)
+            {
+                sb.AppendLine($@"      <Reference Include=""{sdkReference}"" />");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
+            sb.AppendLine("  <ItemGroup>");
             foreach (var packageReference in projectData.NuGetReferences)
             {
                 sb.AppendLine($@"      <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
