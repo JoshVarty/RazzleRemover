@@ -1,0 +1,21 @@
+<Project>
+  <!-- msbuild TextData.csproj /t:tool /v:m -->
+
+  <!-- Removes the default System references that were not listed in .csproj -->
+  <PropertyGroup>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+  </PropertyGroup>
+
+  <Target Name="Tool">
+    <Message Importance="high" Text="AssemblyName:$(AssemblyName)" />
+    <Message Importance="high" Text="RootNamespace:$(RootNamespace)" />
+    <Message Importance="high" Text="NoWarn:$(NoWarn)" />
+    <Message Importance="high" Text="ProjectReferences:@(ProjectReference)" />
+    <!-- TODO: This returns more items than in the original .csproj -->
+    <Message Importance="high" Text="None:@(None)" />
+    <!-- TODO: This doubles the .resx files and ignores the .Designer.cs files -->
+    <Message Importance="high" Text="EmbeddedResource:@(EmbeddedResource)" />
+    <Message Importance="high" Text="Reference:@(Reference), HintPath=%(Reference.HintPath)" />
+  </Target>
+
+</Project>
