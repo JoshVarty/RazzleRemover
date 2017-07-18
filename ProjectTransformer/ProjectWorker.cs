@@ -90,7 +90,7 @@ namespace ProjectTransformer
                             Version = version,
                         });
                     }
-}
+                }
                 else if (line.StartsWith("None:"))
                 {
                     var value = line.Substring("None:".Length);
