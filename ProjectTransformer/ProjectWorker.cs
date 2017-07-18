@@ -92,9 +92,36 @@ namespace ProjectTransformer
     <NoWarn>{projectData.NoWarn}</NoWarn>
   </PropertyGroup>");
 
+            sb.AppendLine("  <ItemGroup>");
+            foreach (var packageReference in projectData.NuGetReferences)
+            {
+                sb.AppendLine($@"      <PackageReference Include=""{packageReference}"" Version=""{getVersionProperty(packageReference)}"" />");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
+            sb.AppendLine("  <ItemGroup>");
+            foreach (var projectReference in projectData.ProjectReferences)
+            {
+                sb.AppendLine($@"      <Reference Include=""{projectReference}"" />");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
             sb.AppendLine("</Project>");
             File.WriteAllText(destinationPath, sb.ToString());
             return destinationPath;
+        }
+
+
+        private static object getVersionProperty(string packageReference)
+        {
+            if (packageReference.StartsWith("Microsoft.VisualStudio."))
+            {
+                return "$(MicrosoftVSSDKVersion)";
+            }
+            else
+            {
+                return packageReference.Replace(".", String.Empty);
+            }
         }
     }
 }
