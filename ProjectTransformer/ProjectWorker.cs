@@ -96,9 +96,9 @@ namespace ProjectTransformer
                     var value = line.Substring("None:".Length);
                     data.OtherFiles = value.Split(';');
                 }
-                else if (line.StartsWith("Resources:"))
+                else if (line.StartsWith("EmbeddedResource:"))
                 {
-                    var value = line.Substring("Resources:".Length);
+                    var value = line.Substring("EmbeddedResource:".Length);
                     data.ResourceFiles = value.Split(';');
                 }
 
