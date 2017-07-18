@@ -51,6 +51,11 @@ namespace ProjectTransformer
                     var value = line.Substring("AssemblyName:".Length);
                     data.AssemblyName = value;
                 }
+                if (line.StartsWith("RootNamespace:"))
+                {
+                    var value = line.Substring("RootNamespace:".Length);
+                    data.RootNamespace = value;
+                }
                 else if (line.StartsWith("NoWarn:"))
                 {
                     var value = line.Substring("NoWarn:".Length);
@@ -108,29 +113,33 @@ namespace ProjectTransformer
             var sb = new StringBuilder();
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
-    <AssemblyName>{projectData.AssemblyName}</AssemblyName>
-    <TargetFramework>net46</TargetFramework>
+    <AssemblyName>{projectData.AssemblyName}</AssemblyName>");
+            if (projectData.RootNamespace != null)
+            {
+                sb.AppendLine($"    <RootNamespace>{projectData.RootNamespace}</RootNamespace>");
+            }
+            sb.AppendLine($@"    <TargetFramework>net46</TargetFramework>
     <NoWarn>{projectData.NoWarn}</NoWarn>
   </PropertyGroup>");
 
             sb.AppendLine("  <ItemGroup>");
             foreach (var sdkReference in projectData.SdkReferences)
             {
-                sb.AppendLine($@"      <Reference Include=""{sdkReference}"" />");
+                sb.AppendLine($@"    <Reference Include=""{sdkReference}"" />");
             }
             sb.AppendLine("  </ItemGroup>");
 
             sb.AppendLine("  <ItemGroup>");
             foreach (var packageReference in projectData.NuGetReferences)
             {
-                sb.AppendLine($@"      <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
             }
             sb.AppendLine("  </ItemGroup>");
 
             sb.AppendLine("  <ItemGroup>");
             foreach (var projectReference in projectData.ProjectReferences)
             {
-                sb.AppendLine($@"      <Reference Include=""{projectReference}"" />");
+                sb.AppendLine($@"    <Reference Include=""{projectReference}"" />");
             }
             sb.AppendLine("  </ItemGroup>");
 

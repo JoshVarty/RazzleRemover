@@ -6,6 +6,7 @@ namespace ProjectTransformer
     internal class ProjectInfo
     {
         public string AssemblyName { get; set; }
+        public string RootNamespace { get; set; }
         public string NoWarn { get; set; }
         public string[] ProjectReferences { get; set; }
         public IList<ProjectReference> NuGetReferences { get; set; } = new List<ProjectReference>();
