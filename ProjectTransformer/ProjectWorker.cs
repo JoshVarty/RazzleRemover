@@ -5,12 +5,15 @@ using System.Text;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Text.RegularExpressions;
 
 namespace ProjectTransformer
 {
     internal class ProjectWorker
     {
         const string MSBuildPath = @"C:\Program Files (x86)\Microsoft Visual Studio\gotoval\MSBuild\15.0\Bin\MSBuild.exe";
+
+        static readonly Regex ExtractVersionFromHintPath = new Regex(@"[\\]([a-zA-Z]|[.])+((\d+[.]*)+)[\\]");
 
         internal static void ProcessProject(string sourcePath, string destinationPath)
         {
@@ -26,7 +29,7 @@ namespace ProjectTransformer
             }
             catch (Exception ex)
             {
-                Console.WriteLine($":( Error: {ex}");
+                Console.WriteLine($":( Error: {ex.Message}");
             }
         }
 
@@ -154,9 +157,9 @@ namespace ProjectTransformer
                         var name = parts[0];
                         var hintPath = parts.Where(part => part.TrimStart().StartsWith("HintPath=")).FirstOrDefault();
                         if (hintPath == null) throw new NotSupportedException();
-                        // Get the version name from the directory name of where nuget stores the binaries.
-                        var version = hintPath.Substring(hintPath.IndexOf(name) + name.Length + 1 /* for dot */);
-                        version = version.Substring(0, version.IndexOf('\\'));
+                        var match = ExtractVersionFromHintPath.Match(hintPath);
+                        if (!match.Success) throw new NotSupportedException();
+                        var version = match.Groups[2].Value;
                         data.NuGetReferences.Add(new ProjectInfo.ProjectReference
                         {
                             Name = name,
