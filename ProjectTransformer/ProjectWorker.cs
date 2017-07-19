@@ -14,12 +14,25 @@ namespace ProjectTransformer
 
         internal static object ProcessProject(string sourcePath, string destinationPath)
         {
+            Console.WriteLine($"Processing {sourcePath}");
+
             var data = new ProjectInfo();
             data = GetDataFromMSBuild(sourcePath, data);
             data = GetDataFromCSProj(sourcePath, data);
 
             var newProjectPath = WriteProject(data, destinationPath);
             return data;
+        }
+
+        internal static void ProcessAllProjects(string solutionFolder)
+        {
+            if (!Directory.Exists(solutionFolder)) throw new DirectoryNotFoundException($"Directory {solutionFolder} does not exist");
+            Console.WriteLine($"Processing all projects in {solutionFolder}");
+
+            foreach (var project in Directory.EnumerateFiles(solutionFolder, "*.csproj", SearchOption.AllDirectories))
+            {
+                ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".new.csproj");
+            }
         }
 
         /// <summary>
@@ -166,59 +179,77 @@ namespace ProjectTransformer
   </PropertyGroup>");
 
             // ------------------------------------------- SdkReferences
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var sdkReference in projectData.SdkReferences)
+            if (projectData.SdkReferences?.Any() == true)
             {
-                sb.AppendLine($@"    <Reference Include=""{sdkReference}"" />");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var sdkReference in projectData.SdkReferences)
+                {
+                    sb.AppendLine($@"    <Reference Include=""{sdkReference}"" />");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- NuGetReferences
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var packageReference in projectData.NuGetReferences)
+            if (projectData.NuGetReferences?.Any() == true)
             {
-                sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var packageReference in projectData.NuGetReferences)
+                {
+                    sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- ProjectReferences
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var projectReference in projectData.ProjectReferences)
+            if (projectData.ProjectReferences?.Any() == true)
             {
-                sb.AppendLine($@"    <Reference Include=""{projectReference}"" />");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var projectReference in projectData.ProjectReferences)
+                {
+                    sb.AppendLine($@"    <Reference Include=""{projectReference}"" />");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- None
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var otherFiles in projectData.OtherFiles)
+            if (projectData.OtherFiles?.Any() == true)
             {
-                sb.AppendLine($@"    <None Include=""{otherFiles}"" />");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var otherFiles in projectData.OtherFiles)
+                {
+                    sb.AppendLine($@"    <None Include=""{otherFiles}"" />");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- EmbeddedResource
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var resource in projectData.ResourceFiles)
+            if (projectData.ResourceFiles?.Any() == true)
             {
-                sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
-                sb.AppendLine($@"      <Generator>{resource.Generator}""</Generator>");
-                sb.AppendLine($@"      <LastGenOutput>{resource.LastGenOutput}""</LastGenOutput>");
-                sb.AppendLine($@"    </EmbeddedResource>");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var resource in projectData.ResourceFiles)
+                {
+                    sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
+                    sb.AppendLine($@"      <Generator>{resource.Generator}""</Generator>");
+                    sb.AppendLine($@"      <LastGenOutput>{resource.LastGenOutput}""</LastGenOutput>");
+                    sb.AppendLine($@"    </EmbeddedResource>");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- Files generated by EmbeddedResource
-            sb.AppendLine("  <ItemGroup>");
-            foreach (var resource in projectData.ResourceFiles)
+            if (projectData.ResourceFiles?.Any() == true)
             {
-                sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
-                sb.AppendLine($@"      <DesignTime>true</DesignTime>");
-                sb.AppendLine($@"      <AutoGen>true</AutoGen>");
-                sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
-                sb.AppendLine($@"    </EmbeddedResource>");
+                sb.AppendLine("  <ItemGroup>");
+                foreach (var resource in projectData.ResourceFiles)
+                {
+                    sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
+                    sb.AppendLine($@"      <DesignTime>true</DesignTime>");
+                    sb.AppendLine($@"      <AutoGen>true</AutoGen>");
+                    sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
+                    sb.AppendLine($@"    </EmbeddedResource>");
+                }
+                sb.AppendLine("  </ItemGroup>");
             }
-            sb.AppendLine("  </ItemGroup>");
 
             // ------------------------------------------- Finish
             sb.AppendLine("</Project>");

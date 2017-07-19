@@ -11,10 +11,18 @@ namespace ProjectTransformer
         // Alive: new[] {@"C:\git\vsc\src\Platform\Text\Def\TextData\TextData.csproj", @"C:\Users\amwieczo\Desktop\sample.csproj"}
         static void Main(string[] args)
         {
-            if (args.Length != 2) throw new ArgumentException("Provide source and destination csproj as argumewnts");
-            var sourcePath = args[0];
-            var destinationPath = args[1];
-            var projectData = ProjectWorker.ProcessProject(sourcePath, destinationPath);
+            if (args.Length == 1)   // Process all csproj in this directory
+            {
+                var solutionFolder = args[0];
+                ProjectWorker.ProcessAllProjects(solutionFolder);
+            }
+            else if (args.Length == 2)
+            {
+                var sourcePath = args[0];
+                var destinationPath = args[1];
+                var projectData = ProjectWorker.ProcessProject(sourcePath, destinationPath);
+            }
+            else throw new ArgumentException("Provide either solution directory or source and destination csproj as arguments");
         }
     }
 }
