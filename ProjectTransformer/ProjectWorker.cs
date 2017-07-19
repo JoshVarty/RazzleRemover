@@ -3,6 +3,8 @@ using System.IO;
 using System.Diagnostics;
 using System.Text;
 using System.Linq;
+using System.Xml;
+using System.Xml.Linq;
 
 namespace ProjectTransformer
 {
@@ -12,10 +14,63 @@ namespace ProjectTransformer
 
         internal static object ProcessProject(string sourcePath, string destinationPath)
         {
+            var data = new ProjectInfo();
+            data = GetDataFromMSBuild(sourcePath, data);
+            data = GetDataFromCSProj(sourcePath, data);
+
+            var newProjectPath = WriteProject(data, destinationPath);
+            return data;
+        }
+
+        /// <summary>
+        /// Analyze MSBuild output and store the data in a ProjectInfo instance
+        /// </summary>
+        /// <param name="sourcePath">Target csproj</param>
+        /// <param name="data">ProjectInfo to augment</param>
+        /// <returns>Augmented ProjectInfo</returns>
+        private static ProjectInfo GetDataFromMSBuild(string sourcePath, ProjectInfo data)
+        {
             var msbuildStream = GetRawData(sourcePath);
-            var projectData = ProcessData(msbuildStream);
-            var newProjectPath = WriteProject(projectData, destinationPath);
-            return projectData;
+            data = ProcessStream(msbuildStream, data);
+            return data;
+        }
+
+        /// <summary>
+        /// Parse csproj and store the data in a ProjectInfo instance
+        /// </summary>
+        /// <param name="sourcePath">Target csproj</param>
+        /// <param name="data">ProjectInfo to augment</param>
+        /// <returns>Augmented ProjectInfo</returns>
+        private static ProjectInfo GetDataFromCSProj(string sourcePath, ProjectInfo data)
+        {
+            var xe = XElement.Load(sourcePath);
+            var elements = xe.Elements();
+            foreach (var group in elements.Where(e => e.Name == "ItemGroup"))
+            {
+                foreach (var none in group.Elements().Where(e => e.Name == "None"))
+                {
+                    var include = none.Attribute(XName.Get("Include"))?.Value;
+                    if (include == null) continue;
+                    if (include == "packages.config") continue; // ignore packages.config
+                    // else, add this include
+                    data.OtherFiles.Add(include);
+                }
+                foreach (var resource in group.Elements().Where(e => e.Name == "EmbeddedResource"))
+                {
+                    var include = resource.Attribute(XName.Get("Include"))?.Value;
+                    if (include == null) continue;
+                    var generator = resource.Element(XName.Get("Generator"))?.Value;
+                    var lastGenOutput = resource.Element(XName.Get("LastGenOutput"))?.Value;
+                    data.ResourceFiles.Add(new ProjectInfo.EmbeddedResource
+                    {
+                        ResX = include,
+                        Generator = generator,
+                        LastGenOutput = lastGenOutput,
+                    });
+                }
+            }
+
+            return data;
         }
 
         private static StreamReader GetRawData(string sourcePath)
@@ -36,9 +91,8 @@ namespace ProjectTransformer
             return msbuild.StandardOutput;
         }
 
-        private static ProjectInfo ProcessData(StreamReader sr)
+        private static ProjectInfo ProcessStream(StreamReader sr, ProjectInfo data)
         {
-            var data = new ProjectInfo();
             string line;
             int lineNumber = 0;
             while (true)
@@ -91,17 +145,6 @@ namespace ProjectTransformer
                         });
                     }
                 }
-                else if (line.StartsWith("None:"))
-                {
-                    var value = line.Substring("None:".Length);
-                    data.OtherFiles = value.Split(';');
-                }
-                else if (line.StartsWith("EmbeddedResource:"))
-                {
-                    var value = line.Substring("EmbeddedResource:".Length);
-                    data.ResourceFiles = value.Split(';');
-                }
-
             }
             return data;
         }
@@ -122,6 +165,7 @@ namespace ProjectTransformer
     <NoWarn>{projectData.NoWarn}</NoWarn>
   </PropertyGroup>");
 
+            // ------------------------------------------- SdkReferences
             sb.AppendLine("  <ItemGroup>");
             foreach (var sdkReference in projectData.SdkReferences)
             {
@@ -129,6 +173,7 @@ namespace ProjectTransformer
             }
             sb.AppendLine("  </ItemGroup>");
 
+            // ------------------------------------------- NuGetReferences
             sb.AppendLine("  <ItemGroup>");
             foreach (var packageReference in projectData.NuGetReferences)
             {
@@ -136,6 +181,7 @@ namespace ProjectTransformer
             }
             sb.AppendLine("  </ItemGroup>");
 
+            // ------------------------------------------- ProjectReferences
             sb.AppendLine("  <ItemGroup>");
             foreach (var projectReference in projectData.ProjectReferences)
             {
@@ -143,6 +189,38 @@ namespace ProjectTransformer
             }
             sb.AppendLine("  </ItemGroup>");
 
+            // ------------------------------------------- None
+            sb.AppendLine("  <ItemGroup>");
+            foreach (var otherFiles in projectData.OtherFiles)
+            {
+                sb.AppendLine($@"    <None Include=""{otherFiles}"" />");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
+            // ------------------------------------------- EmbeddedResource
+            sb.AppendLine("  <ItemGroup>");
+            foreach (var resource in projectData.ResourceFiles)
+            {
+                sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
+                sb.AppendLine($@"      <Generator>{resource.Generator}""</Generator>");
+                sb.AppendLine($@"      <LastGenOutput>{resource.LastGenOutput}""</LastGenOutput>");
+                sb.AppendLine($@"    </EmbeddedResource>");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
+            // ------------------------------------------- Files generated by EmbeddedResource
+            sb.AppendLine("  <ItemGroup>");
+            foreach (var resource in projectData.ResourceFiles)
+            {
+                sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
+                sb.AppendLine($@"      <DesignTime>true</DesignTime>");
+                sb.AppendLine($@"      <AutoGen>true</AutoGen>");
+                sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
+                sb.AppendLine($@"    </EmbeddedResource>");
+            }
+            sb.AppendLine("  </ItemGroup>");
+
+            // ------------------------------------------- Finish
             sb.AppendLine("</Project>");
             File.WriteAllText(destinationPath, sb.ToString());
             return destinationPath;

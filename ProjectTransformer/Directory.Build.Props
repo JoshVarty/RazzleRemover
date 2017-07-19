@@ -11,11 +11,8 @@
     <Message Importance="high" Text="RootNamespace:$(RootNamespace)" />
     <Message Importance="high" Text="NoWarn:$(NoWarn)" />
     <Message Importance="high" Text="ProjectReferences:@(ProjectReference)" />
-    <!-- TODO: This returns more items than in the original .csproj -->
-    <Message Importance="high" Text="None:@(None)" />
-    <!-- TODO: This doubles the .resx files and ignores the .Designer.cs files -->
-    <Message Importance="high" Text="EmbeddedResource:@(EmbeddedResource)" />
     <Message Importance="high" Text="Reference:@(Reference), HintPath=%(Reference.HintPath)" />
+    <!-- Note: @(None) and @(EmbeddedResource) are read from the .csproj by Xml reader -->
   </Target>
 
 </Project>

@@ -8,6 +8,7 @@ namespace ProjectTransformer
 {
     class Program
     {
+        // Alive: new[] {@"C:\git\vsc\src\Platform\Text\Def\TextData\TextData.csproj", @"C:\Users\amwieczo\Desktop\sample.csproj"}
         static void Main(string[] args)
         {
             if (args.Length != 2) throw new ArgumentException("Provide source and destination csproj as argumewnts");
