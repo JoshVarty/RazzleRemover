@@ -37,9 +37,21 @@ namespace ProjectTransformer
         internal static void ProcessAllProjects(string solutionFolder)
         {
             if (!Directory.Exists(solutionFolder)) throw new DirectoryNotFoundException($"Directory {solutionFolder} does not exist");
-            Console.WriteLine($"Processing all projects in {solutionFolder}");
+            Console.WriteLine($"Processing projects in {solutionFolder}");
 
-            foreach (var project in Directory.EnumerateFiles(solutionFolder, "*.csproj", SearchOption.AllDirectories))
+            var allProjects = Directory.EnumerateFiles(solutionFolder, "*.csproj", SearchOption.AllDirectories);
+            var projects = allProjects.Where(n =>
+                !(n.Contains(@"Platform\Applications\")
+                || n.Contains(@"Consolidated\CFEditor\")
+                || n.Contains(@"Platform\ExtensibilityHosting\")
+                || n.Contains(@"Platform\F5DeployPlatform\")        //Going to do this one manually
+                || n.Contains(@"Platform\Imaging\")
+                || n.Contains(@"Platform\Tools\")
+                || n.Contains(@"Platform\UserNotifications\")
+                || n.Contains(@"Platform\Utilities\")
+                || n.Contains(@"Platform\WER\")));
+
+            foreach (var project in projects)
             {
                 ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".new.csproj");
             }
