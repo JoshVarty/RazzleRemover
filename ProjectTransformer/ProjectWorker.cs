@@ -49,7 +49,8 @@ namespace ProjectTransformer
                 || n.Contains(@"Platform\Tools\")
                 || n.Contains(@"Platform\UserNotifications\")
                 || n.Contains(@"Platform\Utilities\")
-                || n.Contains(@"Platform\WER\")));
+                || n.Contains(@"Platform\WER\")
+                || n.EndsWith(".new.csproj")));
 
             foreach (var project in projects)
             {
