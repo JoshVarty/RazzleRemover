@@ -30,6 +30,7 @@ namespace ProjectTransformer
             catch (Exception ex)
             {
                 Console.WriteLine($":( Error: {ex.Message}");
+                throw;
             }
         }
 
@@ -66,10 +67,10 @@ namespace ProjectTransformer
         private static ProjectInfo GetDataFromCSProj(string sourcePath, ProjectInfo data)
         {
             var xe = XElement.Load(sourcePath);
-            var elements = xe.Elements();
-            foreach (var group in elements.Where(e => e.Name == "ItemGroup"))
+            var elements = xe.Elements().ToList();
+            foreach (var group in elements.Where(e => e.Name.LocalName == "ItemGroup"))
             {
-                foreach (var none in group.Elements().Where(e => e.Name == "None"))
+                foreach (var none in group.Elements().Where(e => e.Name.LocalName == "None"))
                 {
                     var include = none.Attribute(XName.Get("Include"))?.Value;
                     if (include == null) continue;
@@ -77,12 +78,12 @@ namespace ProjectTransformer
                     // else, add this include
                     data.OtherFiles.Add(include);
                 }
-                foreach (var resource in group.Elements().Where(e => e.Name == "EmbeddedResource"))
+                foreach (var resource in group.Elements().Where(e => e.Name.LocalName == "EmbeddedResource"))
                 {
                     var include = resource.Attribute(XName.Get("Include"))?.Value;
                     if (include == null) continue;
-                    var generator = resource.Element(XName.Get("Generator"))?.Value;
-                    var lastGenOutput = resource.Element(XName.Get("LastGenOutput"))?.Value;
+                    var generator = resource.GetValue("Generator");
+                    var lastGenOutput = resource.GetValue("LastGenOutput");
                     data.ResourceFiles.Add(new ProjectInfo.EmbeddedResource
                     {
                         ResX = include,
@@ -122,6 +123,7 @@ namespace ProjectTransformer
                 line = sr.ReadLine()?.Trim();
                 if (line == null) break;
                 if (lineNumber++ < 3) continue; // Skip the first three lines
+                if (line.Contains("error MSB4057")) throw new InvalidOperationException("Please run first pass of the tool on the target project and put Directory.Build.props in the target project's root or any parent directory");
                 if (line.StartsWith("AssemblyName:"))
                 {
                     var value = line.Substring("AssemblyName:".Length);
@@ -155,10 +157,11 @@ namespace ProjectTransformer
                     {   // e.g: Reference:Microsoft.VisualStudio.Validation, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture = MSIL, HintPath =..\..\..\..\Packages\Microsoft.VisualStudio.Validation.15.3.15\lib\net45\Microsoft.VisualStudio.Validation.dll
                         var parts = value.Split(',');
                         var name = parts[0];
+                        if (String.IsNullOrWhiteSpace(name)) throw new NotSupportedException("Reference has no name");
                         var hintPath = parts.Where(part => part.TrimStart().StartsWith("HintPath=")).FirstOrDefault();
-                        if (hintPath == null) throw new NotSupportedException();
+                        if (hintPath == null) throw new NotSupportedException("Reference has no HintPath");
                         var match = ExtractVersionFromHintPath.Match(hintPath);
-                        if (!match.Success) throw new NotSupportedException();
+                        if (!match.Success) throw new NotSupportedException("Unable to get version from HintPath");
                         var version = match.Groups[2].Value;
                         data.NuGetReferences.Add(new ProjectInfo.ProjectReference
                         {
@@ -180,7 +183,7 @@ namespace ProjectTransformer
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <AssemblyName>{projectData.AssemblyName}</AssemblyName>");
-            if (projectData.RootNamespace != null)
+            if (!String.IsNullOrWhiteSpace(projectData.RootNamespace))
             {
                 sb.AppendLine($"    <RootNamespace>{projectData.RootNamespace}</RootNamespace>");
             }
