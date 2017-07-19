@@ -91,7 +91,17 @@ namespace ProjectTransformer
                         LastGenOutput = lastGenOutput,
                     });
                 }
-            }
+            }/*
+            foreach (var group in elements.Where(e => e.Name.LocalName == "PropertyGroup"))
+            {
+                var assemblyName = group.GetValue("AssemblyName");
+                var rootNamespace = group.GetValue("RootNamespace");
+                var noWarn = group.GetValue("NoWarn");
+
+                if (assemblyName != null) data.AssemblyName = assemblyName;
+                if (rootNamespace != null) data.RootNamespace = rootNamespace;
+                if (noWarn != null) data.NoWarn = noWarn;
+            }*/
 
             return data;
         }
