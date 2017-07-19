@@ -20,7 +20,7 @@ namespace ProjectTransformer
             {
                 var sourcePath = args[0];
                 var destinationPath = args[1];
-                var projectData = ProjectWorker.ProcessProject(sourcePath, destinationPath);
+                ProjectWorker.ProcessProject(sourcePath, destinationPath);
             }
             else throw new ArgumentException("Provide either solution directory or source and destination csproj as arguments");
         }

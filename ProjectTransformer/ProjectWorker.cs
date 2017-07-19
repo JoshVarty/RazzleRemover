@@ -12,16 +12,22 @@ namespace ProjectTransformer
     {
         const string MSBuildPath = @"C:\Program Files (x86)\Microsoft Visual Studio\gotoval\MSBuild\15.0\Bin\MSBuild.exe";
 
-        internal static object ProcessProject(string sourcePath, string destinationPath)
+        internal static void ProcessProject(string sourcePath, string destinationPath)
         {
             Console.WriteLine($"Processing {sourcePath}");
+            try
+            {
+                var data = new ProjectInfo();
+                data = GetDataFromMSBuild(sourcePath, data);
+                data = GetDataFromCSProj(sourcePath, data);
 
-            var data = new ProjectInfo();
-            data = GetDataFromMSBuild(sourcePath, data);
-            data = GetDataFromCSProj(sourcePath, data);
-
-            var newProjectPath = WriteProject(data, destinationPath);
-            return data;
+                var newProjectPath = WriteProject(data, destinationPath);
+                Console.WriteLine($":) New project saved at {destinationPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($":( Error: {ex}");
+            }
         }
 
         internal static void ProcessAllProjects(string solutionFolder)
