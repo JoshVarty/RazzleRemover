@@ -165,6 +165,7 @@ namespace ProjectTransformer
         private static object WriteProject(ProjectInfo projectData, string destinationPath)
         {
             if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) throw new DirectoryNotFoundException($"Directory {Path.GetDirectoryName(destinationPath)} does not exist");
+            if (String.IsNullOrEmpty(projectData.AssemblyName)) throw new InvalidOperationException($"Cannot create {destinationPath}: Project has no AssemblyName");
 
             var sb = new StringBuilder();
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
