@@ -208,12 +208,14 @@ namespace ProjectTransformer
             var sb = new StringBuilder();
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
-    <AssemblyName>{projectData.AssemblyName}</AssemblyName>");
+    <AssemblyName>{projectData.AssemblyName}</AssemblyName>
+    <TargetFramework>net46</TargetFramework>");
+
             sb.AppendPropertyIfSet(projectData.RootNamespace, nameof(projectData.RootNamespace));
             sb.AppendPropertyIfSet(projectData.NoWarn, nameof(projectData.NoWarn));
             sb.AppendPropertyIfSet(projectData.AssemblyAttributeClsCompliant, nameof(projectData.AssemblyAttributeClsCompliant));
-            sb.AppendLine($@"    <TargetFramework>net46</TargetFramework>
-  </PropertyGroup>");
+
+            sb.AppendLine("  </PropertyGroup>");
 
             // ------------------------------------------- SdkReferences
             if (projectData.SdkReferences?.Any() == true)
