@@ -10,7 +10,7 @@ namespace ProjectTransformer
         public string RootNamespace { get; set; }
         public string NoWarn { get; set; }
         public IList<string> ProjectReferences { get; } = new List<string>();
-        public IList<ProjectReference> NuGetReferences { get; } = new List<ProjectReference>();
+        public IList<ExternalReference> NuGetReferences { get; } = new List<ExternalReference>();
         public IList<string> SdkReferences { get; } = new List<string>();
         public IList<string> OtherFiles { get; } = new List<string>();
         public IList<EmbeddedResource> ResourceFiles { get; } = new List<EmbeddedResource>();
@@ -19,7 +19,7 @@ namespace ProjectTransformer
 
         public override string ToString() => AssemblyName;
 
-        internal class ProjectReference
+        internal class ExternalReference
         {
             public string Name { get; set; }
             public string Version { get; set; }

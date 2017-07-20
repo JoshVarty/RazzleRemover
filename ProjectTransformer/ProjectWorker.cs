@@ -44,16 +44,16 @@ namespace ProjectTransformer
 
             var allProjects = Directory.EnumerateFiles(solutionFolder, "*.csproj", SearchOption.AllDirectories);
             var projects = allProjects.Where(n =>
-                !(n.Contains(@"Platform\Applications\")
-                || n.Contains(@"Consolidated\CFEditor\")
-                || n.Contains(@"Platform\ExtensibilityHosting\")
-                || n.Contains(@"Platform\F5DeployPlatform\")        //Going to do this one manually
-                || n.Contains(@"Platform\Imaging\")
-                || n.Contains(@"Platform\Tools\")
-                || n.Contains(@"Platform\UserNotifications\")
-                || n.Contains(@"Platform\Utilities\")
-                || n.Contains(@"Platform\WER\")
-                || n.EndsWith(".new.csproj")));
+                  (n.Contains(@"Platform\Core\")
+                || n.Contains(@"Platform\Text\")
+                || n.Contains(@"Platform\Language\")
+                //|| n.Contains(@"Platform\F5DeployPlatform\")        //Going to do this one manually
+                //|| n.Contains(@"Platform\Consolidated\")
+                //|| n.Contains(@"Platform\Applications\")
+                //|| n.Contains(@"Platform\Tools\")
+                || n.Contains(@"Platform\MiniBuild\")
+                || n.Contains(@"Platform\SKUs\"))
+                && !n.EndsWith(".new.csproj"));
 
             foreach (var project in projects)
             {
@@ -110,13 +110,24 @@ namespace ProjectTransformer
                     {
                         var name = reference.GetAttribute("Include").Split(',')[0];
                         var match = ExtractVersionFromHintPath.Match(hintPath);
-                        if (!match.Success) throw new NotSupportedException("Unable to get version from HintPath");
-                        var version = match.Groups[VersionGroupNumber].Value;
-                        data.NuGetReferences.Add(new ProjectInfo.ProjectReference
+                        if (!match.Success)
                         {
-                            Name = name,
-                            Version = version,
-                        });
+                            // We were unable to find the version number.
+                            // Proceed adding the reference without specifying the version.
+                            data.NuGetReferences.Add(new ProjectInfo.ExternalReference
+                            {
+                                Name = name,
+                            });
+                        }
+                        else
+                        {
+                            var version = match.Groups[VersionGroupNumber].Value;
+                            data.NuGetReferences.Add(new ProjectInfo.ExternalReference
+                            {
+                                Name = name,
+                                Version = version,
+                            });
+                        }
                     }
                 }
             }
