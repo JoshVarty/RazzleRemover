@@ -104,7 +104,7 @@ namespace ProjectTransformer
                         LastGenOutput = lastGenOutput,
                     });
                 }
-            }/*
+            }
             foreach (var group in elements.Where(e => e.Name.LocalName == "PropertyGroup"))
             {
                 var assemblyName = group.GetValue("AssemblyName");
@@ -114,7 +114,7 @@ namespace ProjectTransformer
                 if (assemblyName != null) data.AssemblyName = assemblyName;
                 if (rootNamespace != null) data.RootNamespace = rootNamespace;
                 if (noWarn != null) data.NoWarn = noWarn;
-            }*/
+            }
 
             return data;
         }
@@ -147,6 +147,7 @@ namespace ProjectTransformer
                 if (line == null) break;
                 if (lineNumber++ < 3) continue; // Skip the first three lines
                 if (line.Contains("error MSB4057")) throw new InvalidOperationException("Please run first pass of the tool on the target project and put Directory.Build.props in the target project's root or any parent directory");
+                /*
                 if (line.StartsWith("AssemblyName:"))
                 {
                     var value = line.Substring("AssemblyName:".Length);
@@ -161,7 +162,7 @@ namespace ProjectTransformer
                 {
                     var value = line.Substring("NoWarn:".Length);
                     data.NoWarn = value;
-                }
+                }*/
                 else if (line.StartsWith("ProjectReferences:"))
                 {
                     var value = line.Substring("ProjectReferences:".Length);
