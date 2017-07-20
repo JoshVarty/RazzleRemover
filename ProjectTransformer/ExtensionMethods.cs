@@ -7,11 +7,19 @@ using System.Xml.Linq;
 
 namespace ProjectTransformer
 {
-    public static class XmlExtensions
+    public static class ExtensionMethods
     {
         public static string GetValue(this XElement element, string name)
         {
             return element.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
+        }
+
+        public static void AppendPropertyIfSet(this StringBuilder sb, string propertyValue, string propertyName)
+        {
+            if (!String.IsNullOrWhiteSpace(propertyValue))
+            {
+                sb.AppendLine($"    <{propertyName}>{propertyValue}</{propertyName}>");
+            }
         }
     }
 }

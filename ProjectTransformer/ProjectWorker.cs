@@ -110,10 +110,12 @@ namespace ProjectTransformer
                 var assemblyName = group.GetValue("AssemblyName");
                 var rootNamespace = group.GetValue("RootNamespace");
                 var noWarn = group.GetValue("NoWarn");
+                var AssemblyAttributeClsCompliant = group.GetValue("AssemblyAttributeClsCompliant");
 
                 if (assemblyName != null) data.AssemblyName = assemblyName;
                 if (rootNamespace != null) data.RootNamespace = rootNamespace;
                 if (noWarn != null) data.NoWarn = noWarn;
+                if (AssemblyAttributeClsCompliant != null) data.AssemblyAttributeClsCompliant = AssemblyAttributeClsCompliant;
             }
 
             return data;
@@ -207,12 +209,10 @@ namespace ProjectTransformer
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <AssemblyName>{projectData.AssemblyName}</AssemblyName>");
-            if (!String.IsNullOrWhiteSpace(projectData.RootNamespace))
-            {
-                sb.AppendLine($"    <RootNamespace>{projectData.RootNamespace}</RootNamespace>");
-            }
+            sb.AppendPropertyIfSet(projectData.RootNamespace, nameof(projectData.RootNamespace));
+            sb.AppendPropertyIfSet(projectData.NoWarn, nameof(projectData.NoWarn));
+            sb.AppendPropertyIfSet(projectData.AssemblyAttributeClsCompliant, nameof(projectData.AssemblyAttributeClsCompliant));
             sb.AppendLine($@"    <TargetFramework>net46</TargetFramework>
-    <NoWarn>{projectData.NoWarn}</NoWarn>
   </PropertyGroup>");
 
             // ------------------------------------------- SdkReferences

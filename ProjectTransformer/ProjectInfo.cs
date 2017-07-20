@@ -16,6 +16,7 @@ namespace ProjectTransformer
         public IList<string> OtherFiles { get; set; } = new List<string>();
         public IList<EmbeddedResource> ResourceFiles { get; set; } = new List<EmbeddedResource>();
         public string[] CodeFiles { get; set; }
+        public string AssemblyAttributeClsCompliant { get; set; }
 
         public override string ToString() => AssemblyName;
 
