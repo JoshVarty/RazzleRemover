@@ -9,12 +9,11 @@ namespace ProjectTransformer
         public string AssemblyName { get; set; }
         public string RootNamespace { get; set; }
         public string NoWarn { get; set; }
-        public string[] ProjectReferences { get; set; }
-        public IList<ProjectReference> NuGetReferences { get; set; } = new List<ProjectReference>();
-        public string[] SdkReferences { get; set; }
-        public string[] ExternalReferences { get; set; }
-        public IList<string> OtherFiles { get; set; } = new List<string>();
-        public IList<EmbeddedResource> ResourceFiles { get; set; } = new List<EmbeddedResource>();
+        public IList<string> ProjectReferences { get; } = new List<string>();
+        public IList<ProjectReference> NuGetReferences { get; } = new List<ProjectReference>();
+        public IList<string> SdkReferences { get; } = new List<string>();
+        public IList<string> OtherFiles { get; } = new List<string>();
+        public IList<EmbeddedResource> ResourceFiles { get; } = new List<EmbeddedResource>();
         public string[] CodeFiles { get; set; }
         public string AssemblyAttributeClsCompliant { get; set; }
 

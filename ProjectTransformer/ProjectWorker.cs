@@ -13,7 +13,11 @@ namespace ProjectTransformer
     {
         const string MSBuildPath = @"C:\Program Files (x86)\Microsoft Visual Studio\gotoval\MSBuild\15.0\Bin\MSBuild.exe";
 
-        static readonly Regex ExtractVersionFromHintPath = new Regex(@"[\\]([a-zA-Z]|[.])+((\d+[.]*)+)[\\]");
+        static readonly Regex ExtractVersionFromHintPath = new Regex(@"[\\](\w|[.])*([a-zA-Z]|[.])+[.]((\d+[.]?)+([-]\w+)?)[\\]"); // Verify at https://regex101.com with test strings
+        // "..\\..\\..\\..\\Packages\\Microsoft.Diagnostics.Tracing.EventSource.Redist.1.1.16-beta\\lib\\net45\\Microsoft.Diagnostics.Tracing.EventSource.dll"
+        // "..\\..\\..\\..\\Packages\\Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime.15.0.25726-Preview5\\lib\\Microsoft.VisualStudio.Imaging.Interop.14.0.DesignTime.dll"
+        // "..\..\..\..\Packages\Microsoft.VisualStudio.Threading.15.3.23\lib\net45\Microsoft.VisualStudio.Threading.dll"
+        const int VersionGroupNumber = 3; // which capture group contains the version number
 
         internal static void ProcessProject(string sourcePath, string destinationPath)
         {
@@ -21,7 +25,7 @@ namespace ProjectTransformer
             try
             {
                 var data = new ProjectInfo();
-                data = GetDataFromMSBuild(sourcePath, data);
+                //data = GetDataFromMSBuild(sourcePath, data);
                 data = GetDataFromCSProj(sourcePath, data);
 
                 var newProjectPath = WriteProject(data, destinationPath);
@@ -67,7 +71,7 @@ namespace ProjectTransformer
         private static ProjectInfo GetDataFromMSBuild(string sourcePath, ProjectInfo data)
         {
             var msbuildStream = GetRawData(sourcePath);
-            data = ProcessStream(msbuildStream, data);
+            //data = ProcessStream(msbuildStream, data);
             return data;
         }
 
@@ -93,7 +97,7 @@ namespace ProjectTransformer
                 }
                 foreach (var resource in group.Elements().Where(e => e.Name.LocalName == "EmbeddedResource"))
                 {
-                    var include = resource.Attribute(XName.Get("Include"))?.Value;
+                    var include = resource.GetAttribute("Include");
                     if (include == null) continue;
                     var generator = resource.GetValue("Generator");
                     var lastGenOutput = resource.GetValue("LastGenOutput");
@@ -103,6 +107,31 @@ namespace ProjectTransformer
                         Generator = generator,
                         LastGenOutput = lastGenOutput,
                     });
+                }
+                foreach (var projectReference in group.Elements().Where(e => e.Name.LocalName == "ProjectReference"))
+                {
+                    data.ProjectReferences.Add(projectReference.GetAttribute("Include"));
+                }
+                foreach (var reference in group.Elements().Where(e => e.Name.LocalName == "Reference"))
+                {
+                    var hintPath = reference.Elements().FirstOrDefault(e => e.Name.LocalName == "HintPath")?.Value;
+                    if (String.IsNullOrEmpty(hintPath))
+                    {
+                        // this might be a .NET SDK reference
+                        data.SdkReferences.Add(reference.GetAttribute("Include"));
+                    }
+                    else
+                    {
+                        var name = reference.GetAttribute("Include").Split(',')[0];
+                        var match = ExtractVersionFromHintPath.Match(hintPath);
+                        if (!match.Success) throw new NotSupportedException("Unable to get version from HintPath");
+                        var version = match.Groups[VersionGroupNumber].Value;
+                        data.NuGetReferences.Add(new ProjectInfo.ProjectReference
+                        {
+                            Name = name,
+                            Version = version,
+                        });
+                    }
                 }
             }
             foreach (var group in elements.Where(e => e.Name.LocalName == "PropertyGroup"))
@@ -164,7 +193,7 @@ namespace ProjectTransformer
                 {
                     var value = line.Substring("NoWarn:".Length);
                     data.NoWarn = value;
-                }*/
+                }
                 else if (line.StartsWith("ProjectReferences:"))
                 {
                     var value = line.Substring("ProjectReferences:".Length);
@@ -195,7 +224,7 @@ namespace ProjectTransformer
                             Version = version,
                         });
                     }
-                }
+                }*/
             }
             return data;
         }

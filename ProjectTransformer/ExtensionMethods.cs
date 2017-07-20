@@ -14,6 +14,11 @@ namespace ProjectTransformer
             return element.Elements().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
         }
 
+        public static string GetAttribute(this XElement element, string name)
+        {
+            return element.Attributes().FirstOrDefault(e => e.Name.LocalName == name)?.Value;
+        }
+
         public static void AppendPropertyIfSet(this StringBuilder sb, string propertyValue, string propertyName)
         {
             if (!String.IsNullOrWhiteSpace(propertyValue))
