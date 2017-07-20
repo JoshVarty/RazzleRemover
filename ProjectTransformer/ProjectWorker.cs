@@ -51,8 +51,9 @@ namespace ProjectTransformer
                 //|| n.Contains(@"Platform\Consolidated\")
                 //|| n.Contains(@"Platform\Applications\")
                 //|| n.Contains(@"Platform\Tools\")
-                || n.Contains(@"Platform\MiniBuild\")
-                || n.Contains(@"Platform\SKUs\"))
+                //|| n.Contains(@"Platform\MiniBuild\")
+                //|| n.Contains(@"Platform\SKUs\")
+                )
                 && !n.EndsWith(".new.csproj"));
 
             foreach (var project in projects)
