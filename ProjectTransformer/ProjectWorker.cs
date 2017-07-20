@@ -25,7 +25,6 @@ namespace ProjectTransformer
             try
             {
                 var data = new ProjectInfo();
-                //data = GetDataFromMSBuild(sourcePath, data);
                 data = GetDataFromCSProj(sourcePath, data);
 
                 var newProjectPath = WriteProject(data, destinationPath);
@@ -60,19 +59,6 @@ namespace ProjectTransformer
             {
                 ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".new.csproj");
             }
-        }
-
-        /// <summary>
-        /// Analyze MSBuild output and store the data in a ProjectInfo instance
-        /// </summary>
-        /// <param name="sourcePath">Target csproj</param>
-        /// <param name="data">ProjectInfo to augment</param>
-        /// <returns>Augmented ProjectInfo</returns>
-        private static ProjectInfo GetDataFromMSBuild(string sourcePath, ProjectInfo data)
-        {
-            var msbuildStream = GetRawData(sourcePath);
-            //data = ProcessStream(msbuildStream, data);
-            return data;
         }
 
         /// <summary>
@@ -147,85 +133,6 @@ namespace ProjectTransformer
                 if (AssemblyAttributeClsCompliant != null) data.AssemblyAttributeClsCompliant = AssemblyAttributeClsCompliant;
             }
 
-            return data;
-        }
-
-        private static StreamReader GetRawData(string sourcePath)
-        {
-            if (!File.Exists(sourcePath)) throw new FileNotFoundException($"Project {sourcePath} does not exist");
-            if (!File.Exists(MSBuildPath)) throw new FileNotFoundException($"Unable to find MSBuild. Please set a correct path in {nameof(ProjectWorker)}.cs");
-
-            var startInfo = new ProcessStartInfo()
-            {
-                Arguments = $"{sourcePath} /t:Tool /v:m",
-                FileName = MSBuildPath,
-                RedirectStandardOutput = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-
-            var msbuild = Process.Start(startInfo);
-            return msbuild.StandardOutput;
-        }
-
-        private static ProjectInfo ProcessStream(StreamReader sr, ProjectInfo data)
-        {
-            string line;
-            int lineNumber = 0;
-            while (true)
-            {
-                line = sr.ReadLine()?.Trim();
-                if (line == null) break;
-                if (lineNumber++ < 3) continue; // Skip the first three lines
-                if (line.Contains("error MSB4057")) throw new InvalidOperationException("Please run first pass of the tool on the target project and put Directory.Build.props in the target project's root or any parent directory");
-                /*
-                if (line.StartsWith("AssemblyName:"))
-                {
-                    var value = line.Substring("AssemblyName:".Length);
-                    data.AssemblyName = value;
-                }
-                if (line.StartsWith("RootNamespace:"))
-                {
-                    var value = line.Substring("RootNamespace:".Length);
-                    data.RootNamespace = value;
-                }
-                else if (line.StartsWith("NoWarn:"))
-                {
-                    var value = line.Substring("NoWarn:".Length);
-                    data.NoWarn = value;
-                }
-                else if (line.StartsWith("ProjectReferences:"))
-                {
-                    var value = line.Substring("ProjectReferences:".Length);
-                    data.ProjectReferences = value.Split(';');
-                }
-                else if (line.StartsWith("Reference:"))
-                {
-                    var value = line.Substring("Reference:".Length);
-                    if (value.TrimEnd().EndsWith(", HintPath="))
-                    {   // e.g: Reference:System;System.Core, HintPath=
-                        // These are system references
-                        value = value.Substring(0, value.Length-", HintPath=".Length);
-                        data.SdkReferences = value.Split(';');
-                    }
-                    else
-                    {   // e.g: Reference:Microsoft.VisualStudio.Validation, Version=15.3.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture = MSIL, HintPath =..\..\..\..\Packages\Microsoft.VisualStudio.Validation.15.3.15\lib\net45\Microsoft.VisualStudio.Validation.dll
-                        var parts = value.Split(',');
-                        var name = parts[0];
-                        if (String.IsNullOrWhiteSpace(name)) throw new NotSupportedException("Reference has no name");
-                        var hintPath = parts.Where(part => part.TrimStart().StartsWith("HintPath=")).FirstOrDefault();
-                        if (hintPath == null) throw new NotSupportedException("Reference has no HintPath");
-                        var match = ExtractVersionFromHintPath.Match(hintPath);
-                        if (!match.Success) throw new NotSupportedException("Unable to get version from HintPath");
-                        var version = match.Groups[2].Value;
-                        data.NuGetReferences.Add(new ProjectInfo.ProjectReference
-                        {
-                            Name = name,
-                            Version = version,
-                        });
-                    }
-                }*/
-            }
             return data;
         }
 
