@@ -19,7 +19,7 @@ namespace ProjectTransformer
         // "..\..\..\..\Packages\Microsoft.VisualStudio.Threading.15.3.23\lib\net45\Microsoft.VisualStudio.Threading.dll"
         const int VersionGroupNumber = 3; // which capture group contains the version number
 
-        internal static void ProcessProject(string sourcePath, string destinationPath)
+        internal static void ProcessProject(string sourcePath, string destinationPath, string solutionFolder = null)
         {
             Console.WriteLine($"Processing {sourcePath}");
             try
@@ -27,7 +27,7 @@ namespace ProjectTransformer
                 var data = new ProjectInfo();
                 data = GetDataFromCSProj(sourcePath, data);
 
-                var newProjectPath = WriteProject(data, destinationPath);
+                var newProjectPath = WriteProject(data, destinationPath, solutionFolder);
                 Console.WriteLine($":) New project saved at {destinationPath}");
             }
             catch (Exception ex)
@@ -58,7 +58,7 @@ namespace ProjectTransformer
 
             foreach (var project in projects)
             {
-                ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".new.csproj");
+                ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".newcsproj", solutionFolder);
             }
         }
 
@@ -148,8 +148,13 @@ namespace ProjectTransformer
             return data;
         }
 
-        private static object WriteProject(ProjectInfo projectData, string destinationPath)
+        private static object WriteProject(ProjectInfo projectData, string destinationPath, string solutionFolder)
         {
+            if (!string.IsNullOrEmpty(solutionFolder))
+            {
+                solutionFolder += solutionFolder.EndsWith(@"\")? "": @"\";
+            }
+
             if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) throw new DirectoryNotFoundException($"Directory {Path.GetDirectoryName(destinationPath)} does not exist");
             if (String.IsNullOrEmpty(projectData.AssemblyName)) throw new InvalidOperationException($"Cannot create {destinationPath}: Project has no AssemblyName");
 
@@ -193,7 +198,13 @@ namespace ProjectTransformer
                 sb.AppendLine("  <ItemGroup>");
                 foreach (var projectReference in projectData.ProjectReferences)
                 {
-                    sb.AppendLine($@"    <Reference Include=""{projectReference}"" />");
+                    string projRef = projectReference;
+                    if (!string.IsNullOrEmpty(solutionFolder))
+                    {
+                        projRef = projRef.Replace(@"$(PlatformPath)\", 
+                            new Uri(destinationPath).MakeRelativeUri(new Uri(solutionFolder)).ToString().Replace('/', Path.DirectorySeparatorChar));
+                    }
+                    sb.AppendLine($@"    <ProjectReference Include=""{projRef}"" />");
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
@@ -233,7 +244,7 @@ namespace ProjectTransformer
                     sb.AppendLine($@"      <DesignTime>true</DesignTime>");
                     sb.AppendLine($@"      <AutoGen>true</AutoGen>");
                     sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
-                    sb.AppendLine($@"    </EmbeddedResource>");
+                    sb.AppendLine($@"    </Compile>");
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
