@@ -21,7 +21,7 @@ namespace ProjectTransformer
 
         internal static void ProcessProject(string sourcePath, string destinationPath)
         {
-            Console.WriteLine($"Processing {sourcePath}");
+            Console.WriteLine($"Processing single project: {sourcePath}");
             try
             {
                 var data = new ProjectInfo();
@@ -37,10 +37,12 @@ namespace ProjectTransformer
             }
         }
 
-        internal static void ProcessAllProjects(string solutionFolder)
+        internal static void ProcessAllProjects(string solutionFolder, string destinationPath)
         {
             if (!Directory.Exists(solutionFolder)) throw new DirectoryNotFoundException($"Directory {solutionFolder} does not exist");
-            Console.WriteLine($"Processing projects in {solutionFolder}");
+            if (!Directory.Exists(destinationPath)) Directory.CreateDirectory(destinationPath);
+
+            Console.WriteLine($"Processing eligible projects in {solutionFolder}");
 
             var allProjects = Directory.EnumerateFiles(solutionFolder, "*.csproj", SearchOption.AllDirectories);
             var projects = allProjects.Where(n =>
@@ -53,12 +55,11 @@ namespace ProjectTransformer
                 //|| n.Contains(@"Platform\Tools\")
                 //|| n.Contains(@"Platform\MiniBuild\")
                 //|| n.Contains(@"Platform\SKUs\")
-                )
-                && !n.EndsWith(".new.csproj"));
+                ));
 
             foreach (var project in projects)
             {
-                ProcessProject(project, project.Substring(0, project.Length - ".csproj".Length) + ".new.csproj");
+                ProcessProject(project, destinationPath + project.Substring(solutionFolder.Length));
             }
         }
 
@@ -150,8 +151,10 @@ namespace ProjectTransformer
 
         private static object WriteProject(ProjectInfo projectData, string destinationPath)
         {
-            if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) throw new DirectoryNotFoundException($"Directory {Path.GetDirectoryName(destinationPath)} does not exist");
             if (String.IsNullOrEmpty(projectData.AssemblyName)) throw new InvalidOperationException($"Cannot create {destinationPath}: Project has no AssemblyName");
+
+            var hostDirectory = Path.GetDirectoryName(destinationPath);
+            if (!Directory.Exists(hostDirectory)) Directory.CreateDirectory(hostDirectory);
 
             var sb = new StringBuilder();
             sb.AppendLine($@"<Project Sdk=""Microsoft.NET.Sdk"">
