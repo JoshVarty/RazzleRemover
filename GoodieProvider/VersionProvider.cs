@@ -34,8 +34,26 @@ namespace GoodieProvider
                     Console.WriteLine($"Unable to get version for {name} in {Path.GetFileName(project)}");
                     continue;
                 }
+                if (version.StartsWith("$("))
+                {
+                    // This is a msbuild variable. This project was already converted.
+                    continue;
+                }
                 PackageVersions.Add(name, version);
+                var propertyName = getPropertyNameForPackage(name);
+                reference.Elements().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
             }
+            var x = xe;
+        }
+
+        /// <summary>
+        /// Creates a MSBuild property for a given package name.
+        /// Removes dots from the given package name.
+        /// </summary>
+        private string getPropertyNameForPackage(string name)
+        {
+            var processedName = name.Replace(".", "");
+            return $"$({processedName})";
         }
     }
 }
