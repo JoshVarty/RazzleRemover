@@ -123,6 +123,12 @@ namespace ProjectTransformer
                         else
                         {
                             var version = match.Groups[VersionGroupNumber].Value;
+                            if (!string.IsNullOrEmpty(version))
+                            {
+                                string[] versionParts = version.Split('.');
+                                version = string.Join(".", versionParts.Skip(Math.Max(0, versionParts.Length - 3)));
+                            }
+
                             data.NuGetReferences.Add(new ProjectInfo.ExternalReference
                             {
                                 Name = name,
