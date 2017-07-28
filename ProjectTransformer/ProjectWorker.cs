@@ -19,7 +19,7 @@ namespace ProjectTransformer
         // "..\..\..\..\Packages\Microsoft.VisualStudio.Threading.15.3.23\lib\net45\Microsoft.VisualStudio.Threading.dll"
         const int VersionGroupNumber = 3; // which capture group contains the version number
 
-        internal static void ProcessProject(string sourcePath, string destinationPath)
+        internal static void ProcessProject(string sourcePath, string destinationPath, string solutionFolder = null)
         {
             Console.WriteLine($"Processing single project: {sourcePath}");
             try
@@ -27,7 +27,7 @@ namespace ProjectTransformer
                 var data = new ProjectInfo();
                 data = GetDataFromCSProj(sourcePath, data);
 
-                var newProjectPath = WriteProject(data, destinationPath);
+                var newProjectPath = WriteProject(data, destinationPath, solutionFolder);
                 Console.WriteLine($":) New project saved at {destinationPath}");
             }
             catch (Exception ex)
@@ -59,7 +59,7 @@ namespace ProjectTransformer
 
             foreach (var project in projects)
             {
-                ProcessProject(project, destinationPath + project.Substring(solutionFolder.Length));
+                ProcessProject(project, destinationPath + project.Substring(solutionFolder.Length), destinationPath);
             }
         }
 
@@ -89,11 +89,15 @@ namespace ProjectTransformer
                     if (include == null) continue;
                     var generator = resource.GetValue("Generator");
                     var lastGenOutput = resource.GetValue("LastGenOutput");
+                    var logicalName = resource.GetValue("LogicalName");
+                    var manifestResourceName = resource.GetValue("ManifestResourceName");
                     data.ResourceFiles.Add(new ProjectInfo.EmbeddedResource
                     {
                         ResX = include,
                         Generator = generator,
                         LastGenOutput = lastGenOutput,
+                        LogicalName = logicalName,
+                        ManifestResourceName = manifestResourceName
                     });
                 }
                 foreach (var projectReference in group.Elements().Where(e => e.Name.LocalName == "ProjectReference"))
@@ -124,6 +128,12 @@ namespace ProjectTransformer
                         else
                         {
                             var version = match.Groups[VersionGroupNumber].Value;
+                            if (!string.IsNullOrEmpty(version))
+                            {
+                                string[] versionParts = version.Split('.');
+                                version = string.Join(".", versionParts.Skip(Math.Max(0, versionParts.Length - 3)));
+                            }
+
                             data.NuGetReferences.Add(new ProjectInfo.ExternalReference
                             {
                                 Name = name,
@@ -149,8 +159,18 @@ namespace ProjectTransformer
             return data;
         }
 
-        private static object WriteProject(ProjectInfo projectData, string destinationPath)
+        private static object WriteProject(ProjectInfo projectData, string destinationPath, string solutionFolder)
         {
+            if (string.IsNullOrEmpty(solutionFolder))
+            {
+                solutionFolder = destinationPath;
+            }
+
+            solutionFolder += solutionFolder.EndsWith(@"\")? "": @"\";
+            string pathToRoot = new Uri(destinationPath).MakeRelativeUri(new Uri(solutionFolder)).ToString().Replace('/', Path.DirectorySeparatorChar);
+
+            if (!Directory.Exists(Path.GetDirectoryName(destinationPath))) throw new DirectoryNotFoundException($"Directory {Path.GetDirectoryName(destinationPath)} does not exist");
+
             if (String.IsNullOrEmpty(projectData.AssemblyName)) throw new InvalidOperationException($"Cannot create {destinationPath}: Project has no AssemblyName");
 
             var hostDirectory = Path.GetDirectoryName(destinationPath);
@@ -196,7 +216,7 @@ namespace ProjectTransformer
                 sb.AppendLine("  <ItemGroup>");
                 foreach (var projectReference in projectData.ProjectReferences)
                 {
-                    sb.AppendLine($@"    <Reference Include=""{projectReference}"" />");
+                    sb.AppendLine($@"    <ProjectReference Include=""{projectReference.Replace(@"$(PlatformPath)\", pathToRoot)}"" />");
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
@@ -219,8 +239,22 @@ namespace ProjectTransformer
                 foreach (var resource in projectData.ResourceFiles)
                 {
                     sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
-                    sb.AppendLine($@"      <Generator>{resource.Generator}""</Generator>");
-                    sb.AppendLine($@"      <LastGenOutput>{resource.LastGenOutput}""</LastGenOutput>");
+                    if (!string.IsNullOrEmpty(resource.Generator))
+                    {
+                        sb.AppendLine($@"      <Generator>{resource.Generator}</Generator>");
+                    }
+                    if (!string.IsNullOrEmpty(resource.LastGenOutput))
+                    {
+                        sb.AppendLine($@"      <LastGenOutput>{resource.LastGenOutput}</LastGenOutput>");
+                    }
+                    if (!string.IsNullOrEmpty(resource.LogicalName))
+                    {
+                        sb.AppendLine($@"      <LogicalName>{resource.LogicalName}</LogicalName>");
+                    }
+                    if (!string.IsNullOrEmpty(resource.ManifestResourceName))
+                    {
+                        sb.AppendLine($@"      <ManifestResourceName>{resource.ManifestResourceName}</ManifestResourceName>");
+                    }
                     sb.AppendLine($@"    </EmbeddedResource>");
                 }
                 sb.AppendLine("  </ItemGroup>");
@@ -232,11 +266,15 @@ namespace ProjectTransformer
                 sb.AppendLine("  <ItemGroup>");
                 foreach (var resource in projectData.ResourceFiles)
                 {
-                    sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
-                    sb.AppendLine($@"      <DesignTime>true</DesignTime>");
-                    sb.AppendLine($@"      <AutoGen>true</AutoGen>");
-                    sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
-                    sb.AppendLine($@"    </EmbeddedResource>");
+                    // not all embedded resources are resx and generate files (e.g. cur files)
+                    if (resource.ResX.EndsWith(".resx"))
+                    {
+                        sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
+                        sb.AppendLine($@"      <DesignTime>true</DesignTime>");
+                        sb.AppendLine($@"      <AutoGen>true</AutoGen>");
+                        sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
+                        sb.AppendLine($@"    </Compile>");
+                    }
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
