@@ -88,6 +88,7 @@ namespace GoodieProvider
                 int valueCount = 0;
                 if (reference.Value.Count == 1)
                 {
+                    if (String.IsNullOrWhiteSpace(reference.Value.Single())) Console.WriteLine($"Warning: Package {name} doesn't specify a version.");
                     sb.AppendLine($"    <{name}>{reference.Value.Single()}</{name}>");
                 }
                 else
@@ -95,6 +96,7 @@ namespace GoodieProvider
                     foreach (var value in reference.Value)
                     {
                         Console.WriteLine($"Warning: Package {name} is referenced by multiple versions: {value}");
+                        if (String.IsNullOrWhiteSpace(value)) Console.WriteLine($"Warning: Package {name} doesn't specify a version.");
                         sb.AppendLine($"    <{name}>{value}</{name}>");
                     }
                 }
