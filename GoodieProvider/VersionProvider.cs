@@ -96,9 +96,19 @@ namespace GoodieProvider
 
         private MultiValueDictionary<string, string> LoadProps(string propsPath)
         {
+            var dictionary = new MultiValueDictionary<string, string>();
             if (!File.Exists(propsPath))
             {
-                return new MultiValueDictionary<string, string>();
+                return dictionary;
+            }
+            var xe = XElement.Load(propsPath);
+            var group = xe.Elements().Single(n => n.Name.LocalName == "PropertyGroup");
+            var properties = group.Elements();
+            foreach (var property in properties)
+            {
+                var name = property.Name.LocalName;
+                var version = property.Value;
+                dictionary.Add(name, version);
             }
             return new MultiValueDictionary<string, string>(); // TODO. load props
         }
