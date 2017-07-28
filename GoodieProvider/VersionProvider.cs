@@ -44,8 +44,7 @@ namespace GoodieProvider
                 var propertyName = getPropertyNameForPackage(name, declaration: false);
                 reference.Elements().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
             }
-            // TODO: Save xe
-            var x = xe;
+            xe.Save(project);
         }
 
 
