@@ -29,20 +29,33 @@ namespace GoodieProvider
             foreach (var reference in references)
             {
                 var name = reference.Attributes().Single(n => n.Name.LocalName == "Include").Value;
-                var version = reference.Elements().SingleOrDefault(n => n.Name.LocalName == "Version")?.Value;
+                var version = reference.Attributes().SingleOrDefault(n => n.Name.LocalName == "Version")?.Value;
                 if (version == null)
                 {
-                    Console.WriteLine($"Unable to get version for {name} in {Path.GetFileName(project)}");
-                    continue;
+                    // There is no version attribute, perhaps there is a version element...
+                    version = reference.Elements().SingleOrDefault(n => n.Name.LocalName == "Version")?.Value;
+                    if (version == null)
+                    {
+                        Console.WriteLine($"Unable to get version for {name} in {Path.GetFileName(project)}");
+                        continue;
+                    } else
+                    {
+                        Console.WriteLine($"Fixing a malformed PackageReference for {name} in {Path.GetFileName(project)}");
+                        reference.Elements().Single(n => n.Name.LocalName == "Version").Remove();
+                        reference.Add(new XAttribute("Version", version));
+                    }
                 }
+
                 if (version.StartsWith("$("))
                 {
                     // This is a msbuild variable. This project was already converted.
                     continue;
                 }
+                Console.WriteLine($"Converting PackageReference for {name} in {Path.GetFileName(project)}");
+
                 PackageVersions.Add(name, version);
                 var propertyName = getPropertyNameForPackage(name, declaration: false);
-                reference.Elements().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
+                reference.Attributes().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
             }
             xe.Save(project);
         }
