@@ -102,7 +102,6 @@ namespace GoodieProvider
             foreach (var reference in existingVersions)
             {
                 var name = reference.Key;
-                int valueCount = 0;
                 if (reference.Value.Count == 1)
                 {
                     if (String.IsNullOrWhiteSpace(reference.Value.Single())) Console.WriteLine($"Warning: Package {name} doesn't specify a version.");
