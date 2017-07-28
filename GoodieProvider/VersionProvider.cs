@@ -99,7 +99,7 @@ namespace GoodieProvider
             var sb = new StringBuilder();
             sb.AppendLine($"<Project xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">");
             sb.AppendLine($"  <PropertyGroup>");
-            foreach (var reference in existingVersions)
+            foreach (var reference in existingVersions.OrderBy(n => n.Key))
             {
                 var name = reference.Key;
                 if (reference.Value.Count == 1)
@@ -140,7 +140,7 @@ namespace GoodieProvider
                 var version = property.Value;
                 dictionary.Add(name, version);
             }
-            return new MultiValueDictionary<string, string>(); // TODO. load props
+            return dictionary;
         }
 
 
