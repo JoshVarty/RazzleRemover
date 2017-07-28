@@ -25,6 +25,8 @@ namespace GoodieProvider
         private void GetVersionsAndModifyProject(string project)
         {
             var xe = XElement.Load(project);
+            bool projectChanged = false;
+
             var references = xe.Elements().Descendants().Where(n => n.Name.LocalName == "PackageReference");
             foreach (var reference in references)
             {
@@ -41,6 +43,7 @@ namespace GoodieProvider
                     } else
                     {
                         Console.WriteLine($"Fixing a malformed PackageReference for {name} in {Path.GetFileName(project)}");
+                        projectChanged = true;
                         reference.Elements().Single(n => n.Name.LocalName == "Version").Remove();
                         reference.Add(new XAttribute("Version", version));
                     }
@@ -53,11 +56,25 @@ namespace GoodieProvider
                 }
                 Console.WriteLine($"Converting PackageReference for {name} in {Path.GetFileName(project)}");
 
-                PackageVersions.Add(name, version);
+                if (PackageVersions.ContainsKey(name)
+                    && PackageVersions[name].Contains(version))
+                {
+                    // Don't add duplicates
+                }
+                else
+                {
+                    PackageVersions.Add(name, version);
+                }
+
                 var propertyName = getPropertyNameForPackage(name, declaration: false);
                 reference.Attributes().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
+                projectChanged = true;
             }
-            xe.Save(project);
+
+            if (projectChanged)
+            {
+                xe.Save(project);
+            }
         }
 
 
