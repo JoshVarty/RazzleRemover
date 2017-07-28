@@ -10,6 +10,14 @@ namespace GoodieProvider
     {
         static void Main(string[] args)
         {
+            if (args.Length != 1)
+            {
+                Console.WriteLine(@"Please provide the path to the repository in first argument.");
+            }
+
+            var sourcePath = args[0].Trim().TrimEnd('\\');
+
+            new VersionProvider().ProcessAllProjects(sourcePath);
         }
     }
 }
