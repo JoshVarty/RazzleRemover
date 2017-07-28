@@ -18,7 +18,7 @@ namespace GoodieProvider
             {
                 GetVersionsAndModifyProject(project);
             }
-            // Save the versions.props
+            UpdateAndSaveVersionProps(sourcePath);
         }
 
         private void GetVersionsAndModifyProject(string project)
@@ -43,8 +43,38 @@ namespace GoodieProvider
                 var propertyName = getPropertyNameForPackage(name);
                 reference.Elements().Single(n => n.Name.LocalName == "Version").SetValue(propertyName);
             }
+            // TODO: Save xe
             var x = xe;
         }
+
+
+        private void UpdateAndSaveVersionProps(string sourcePath)
+        {
+            // Load existing versions.props
+            var existingVersions = LoadProps(Path.Combine(sourcePath, "build", "versions.props"));
+            // Add newly discovered versions
+            foreach (var discoveredVersion in PackageVersions)
+            {
+                var name = discoveredVersion.Key;
+                var propertyName = getPropertyNameForPackage(name);
+                foreach (var version in discoveredVersion.Value)
+                {
+                    existingVersions.Add(propertyName, version);
+                }
+            }
+            // Save the combined versions.props
+
+        }
+
+        private MultiValueDictionary<string, string> LoadProps(string propsPath)
+        {
+            if (!File.Exists(propsPath))
+            {
+                return new MultiValueDictionary<string, string>();
+            }
+            return new MultiValueDictionary<string, string>(); // TODO. load props
+        }
+
 
         /// <summary>
         /// Creates a MSBuild property for a given package name.
