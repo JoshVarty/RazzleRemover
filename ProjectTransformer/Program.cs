@@ -11,18 +11,27 @@ namespace ProjectTransformer
         // Alive: new[] {@"C:\git\vsc\src\Platform\Text\Def\TextData\TextData.csproj", @"C:\Users\amwieczo\Desktop\sample.csproj"}
         static void Main(string[] args)
         {
-            if (args.Length == 1)   // Process all csproj in this directory
+            if (args.Length != 2)
             {
-                var solutionFolder = args[0];
-                ProjectWorker.ProcessAllProjects(solutionFolder);
+                Console.WriteLine(@"Usage:
+first argument  - Directory with solution to derazzle
+second argument - Output directory
+Or:
+first argument  - Project to derazzle
+second argument - Destination path for converted project");
             }
-            else if (args.Length == 2)
+
+            var sourcePath = args[0].Trim().TrimEnd('\\');
+            var destinationPath = args[1].Trim().TrimEnd('\\');
+
+            if (sourcePath.EndsWith(".csproj"))
             {
-                var sourcePath = args[0];
-                var destinationPath = args[1];
                 ProjectWorker.ProcessProject(sourcePath, destinationPath);
             }
-            else throw new ArgumentException("Provide either solution directory or source and destination csproj as arguments");
+            else
+            {
+                ProjectWorker.ProcessAllProjects(sourcePath, destinationPath);
+            }
         }
     }
 }

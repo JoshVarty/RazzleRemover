@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26703.0
+VisualStudioVersion = 15.0.26127.3
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RazzleRemover", "RemoveVSDirFromCsProj\RazzleRemover.csproj", "{B2186DAB-3257-43BA-B955-26CFFB603C2C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProjectTransformer", "ProjectTransformer\ProjectTransformer.csproj", "{5ABAE0AA-ED37-4F5F-8E8C-37A3562B2952}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoodieProvider", "GoodieProvider\GoodieProvider.csproj", "{440ECF7B-DFF7-4F5C-A636-3D7749C064B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{5ABAE0AA-ED37-4F5F-8E8C-37A3562B2952}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5ABAE0AA-ED37-4F5F-8E8C-37A3562B2952}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5ABAE0AA-ED37-4F5F-8E8C-37A3562B2952}.Release|Any CPU.Build.0 = Release|Any CPU
+		{440ECF7B-DFF7-4F5C-A636-3D7749C064B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{440ECF7B-DFF7-4F5C-A636-3D7749C064B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{440ECF7B-DFF7-4F5C-A636-3D7749C064B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{440ECF7B-DFF7-4F5C-A636-3D7749C064B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
