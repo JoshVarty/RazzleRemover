@@ -30,10 +30,9 @@ namespace ProjectTransformer
             public string ResX { get; set; }
             public string Generator { get; set; }
             public string LastGenOutput { get; set; }
-
             public string LogicalName { get; set; }
-
             public string ManifestResourceName { get; set; }
+            public string SubType { get; set; }
         }
     }
 }

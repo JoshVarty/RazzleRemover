@@ -91,13 +91,15 @@ namespace ProjectTransformer
                     var lastGenOutput = resource.GetValue("LastGenOutput");
                     var logicalName = resource.GetValue("LogicalName");
                     var manifestResourceName = resource.GetValue("ManifestResourceName");
+                    var subType = resource.GetValue("SubType");
                     data.ResourceFiles.Add(new ProjectInfo.EmbeddedResource
                     {
                         ResX = include,
                         Generator = generator,
                         LastGenOutput = lastGenOutput,
                         LogicalName = logicalName,
-                        ManifestResourceName = manifestResourceName
+                        ManifestResourceName = manifestResourceName,
+                        SubType = subType
                     });
                 }
                 foreach (var projectReference in group.Elements().Where(e => e.Name.LocalName == "ProjectReference"))
@@ -205,7 +207,20 @@ namespace ProjectTransformer
                 sb.AppendLine("  <ItemGroup>");
                 foreach (var packageReference in projectData.NuGetReferences)
                 {
-                    sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                    if (packageReference.Name.Contains("Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions"))
+                    {
+                        //ignore it
+                    }
+                    else if (packageReference.Name.Contains("Microsoft.VisualStudio.QualityTools.UnitTestFramework") ||
+                        packageReference.Name.Contains("Microsoft.VisualStudio.TestPlatform.TestFramework"))
+                    {
+                        sb.AppendLine(@"    <PackageReference Include=""MSTest.TestAdapter"" Version=""1.1.18"" />
+    <PackageReference Include=""MSTest.TestFramework"" Version=""1.1.18"" /> ");
+                    }
+                    else
+                    {
+                        sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                    }
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
@@ -239,6 +254,10 @@ namespace ProjectTransformer
                 foreach (var resource in projectData.ResourceFiles)
                 {
                     sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
+                    //if (!string.IsNullOrEmpty(resource.SubType))
+                    //{
+                    //    sb.AppendLine($@"      <SubType>{resource.SubType}</SubType>");
+                    //}
                     if (!string.IsNullOrEmpty(resource.Generator))
                     {
                         sb.AppendLine($@"      <Generator>{resource.Generator}</Generator>");
@@ -272,7 +291,7 @@ namespace ProjectTransformer
                         sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
                         sb.AppendLine($@"      <DesignTime>true</DesignTime>");
                         sb.AppendLine($@"      <AutoGen>true</AutoGen>");
-                        sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
+                        sb.AppendLine($@"      <DependentUpon>{resource.ResX}</DependentUpon>");
                         sb.AppendLine($@"    </Compile>");
                     }
                 }
