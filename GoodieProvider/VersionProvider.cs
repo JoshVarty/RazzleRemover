@@ -14,14 +14,6 @@ namespace GoodieProvider
         /// </summary>
         MultiValueDictionary<string, string> PackageVersions = new MultiValueDictionary<string, string>();
 
-        /// <summary>
-        /// Some referenced projects live in the lib\ folder and we won't update them.
-        /// </summary>
-        readonly List<string> PackagesFromLibFolder = new List<string>
-        {
-            "Microsoft.VisualStudio.QualityTools.MockObjectFramework",
-        };
-
         public void ProcessAllProjects(string sourcePath)
         {
             if (!Directory.Exists(sourcePath)) throw new DirectoryNotFoundException($"Directory {sourcePath} does not exist");
@@ -42,12 +34,6 @@ namespace GoodieProvider
             foreach (var reference in references)
             {
                 var name = reference.Attributes().Single(n => n.Name.LocalName == "Include").Value;
-
-                // Special handling for binaries we reference from the lib folder
-                if (PackagesFromLibFolder.Any(n => name.Contains(n)))
-                {
-                    continue;
-                }
 
                 var version = reference.Attributes().SingleOrDefault(n => n.Name.LocalName == "Version")?.Value;
                 if (version == null)
