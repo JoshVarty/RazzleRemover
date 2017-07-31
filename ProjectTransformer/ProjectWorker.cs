@@ -149,11 +149,13 @@ namespace ProjectTransformer
             {
                 var assemblyName = group.GetValue("AssemblyName");
                 var rootNamespace = group.GetValue("RootNamespace");
+                var shippingAssembly = group.GetValue("ShippingAssembly");
                 var noWarn = group.GetValue("NoWarn");
                 var AssemblyAttributeClsCompliant = group.GetValue("AssemblyAttributeClsCompliant");
 
                 if (assemblyName != null) data.AssemblyName = assemblyName;
                 if (rootNamespace != null) data.RootNamespace = rootNamespace;
+                if (shippingAssembly != null) data.ShippingAssembly = shippingAssembly;
                 if (noWarn != null) data.NoWarn = noWarn;
                 if (AssemblyAttributeClsCompliant != null) data.AssemblyAttributeClsCompliant = AssemblyAttributeClsCompliant;
             }
@@ -185,6 +187,7 @@ namespace ProjectTransformer
     <TargetFramework>net46</TargetFramework>");
 
             sb.AppendPropertyIfSet(projectData.RootNamespace, nameof(projectData.RootNamespace));
+            sb.AppendPropertyIfSet(projectData.ShippingAssembly, nameof(projectData.ShippingAssembly));
             sb.AppendPropertyIfSet(projectData.NoWarn, nameof(projectData.NoWarn));
             sb.AppendPropertyIfSet(projectData.AssemblyAttributeClsCompliant, nameof(projectData.AssemblyAttributeClsCompliant));
 
@@ -216,6 +219,12 @@ namespace ProjectTransformer
                     {
                         sb.AppendLine(@"    <PackageReference Include=""MSTest.TestAdapter"" Version=""1.1.18"" />
     <PackageReference Include=""MSTest.TestFramework"" Version=""1.1.18"" /> ");
+                    }
+                    else if (packageReference.Name.Contains("Microsoft.VisualStudio.QualityTools.MockObjectFramework"))
+                    {
+                        sb.AppendLine($@"    <Reference Include=""Microsoft.VisualStudio.QualityTools.MockObjectFramework"">
+      <HintPath>{pathToRoot}..\lib\MOF\Microsoft.VisualStudio.QualityTools.MockObjectFramework.dll</HintPath>
+    </Reference> ");
                     }
                     else
                     {
