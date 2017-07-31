@@ -33,7 +33,6 @@ namespace ProjectTransformer
             public string LastGenOutput { get; set; }
             public string LogicalName { get; set; }
             public string ManifestResourceName { get; set; }
-            public string SubType { get; set; }
         }
     }
 }

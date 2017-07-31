@@ -91,7 +91,6 @@ namespace ProjectTransformer
                     var lastGenOutput = resource.GetValue("LastGenOutput");
                     var logicalName = resource.GetValue("LogicalName");
                     var manifestResourceName = resource.GetValue("ManifestResourceName");
-                    var subType = resource.GetValue("SubType");
                     data.ResourceFiles.Add(new ProjectInfo.EmbeddedResource
                     {
                         ResX = include,
@@ -99,7 +98,6 @@ namespace ProjectTransformer
                         LastGenOutput = lastGenOutput,
                         LogicalName = logicalName,
                         ManifestResourceName = manifestResourceName,
-                        SubType = subType
                     });
                 }
                 foreach (var projectReference in group.Elements().Where(e => e.Name.LocalName == "ProjectReference"))
@@ -263,10 +261,7 @@ namespace ProjectTransformer
                 foreach (var resource in projectData.ResourceFiles)
                 {
                     sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
-                    //if (!string.IsNullOrEmpty(resource.SubType))
-                    //{
-                    //    sb.AppendLine($@"      <SubType>{resource.SubType}</SubType>");
-                    //}
+
                     if (!string.IsNullOrEmpty(resource.Generator))
                     {
                         sb.AppendLine($@"      <Generator>{resource.Generator}</Generator>");
