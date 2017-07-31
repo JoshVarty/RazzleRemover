@@ -9,7 +9,18 @@ namespace GoodieProvider
 {
     public class VersionProvider
     {
+        /// <summary>
+        /// This holds package versions discovered when reading the .csproj files
+        /// </summary>
         MultiValueDictionary<string, string> PackageVersions = new MultiValueDictionary<string, string>();
+
+        /// <summary>
+        /// Some referenced projects live in the lib\ folder and we won't update them.
+        /// </summary>
+        readonly List<string> PackagesFromLibFolder = new List<string>
+        {
+            "Microsoft.VisualStudio.QualityTools.MockObjectFramework",
+        };
 
         public void ProcessAllProjects(string sourcePath)
         {
@@ -31,6 +42,13 @@ namespace GoodieProvider
             foreach (var reference in references)
             {
                 var name = reference.Attributes().Single(n => n.Name.LocalName == "Include").Value;
+
+                // Special handling for binaries we reference from the lib folder
+                if (PackagesFromLibFolder.Any(n => name.Contains(n)))
+                {
+                    continue;
+                }
+
                 var version = reference.Attributes().SingleOrDefault(n => n.Name.LocalName == "Version")?.Value;
                 if (version == null)
                 {
@@ -51,7 +69,7 @@ namespace GoodieProvider
 
                 if (version.StartsWith("$("))
                 {
-                    // This is a msbuild variable. This project was already converted.
+                    // We encountered a msbuild variable. This project was already converted.
                     continue;
                 }
                 Console.WriteLine($"Converting PackageReference for {name} in {Path.GetFileName(project)}");
@@ -59,7 +77,7 @@ namespace GoodieProvider
                 if (PackageVersions.ContainsKey(name)
                     && PackageVersions[name].Contains(version))
                 {
-                    // Don't add duplicates
+                    // NOP: Don't add duplicates
                 }
                 else
                 {
@@ -76,7 +94,6 @@ namespace GoodieProvider
                 xe.Save(project);
             }
         }
-
 
         private void UpdateAndSaveVersionProps(string sourcePath)
         {
