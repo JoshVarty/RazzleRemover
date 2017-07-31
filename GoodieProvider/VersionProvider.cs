@@ -153,7 +153,7 @@ namespace GoodieProvider
         /// </summary>
         private string getPropertyNameForPackage(string name, bool declaration)
         {
-            var processedName = name.Replace(".", "");
+            var processedName = name.Replace(".", "") + "Version";
             return declaration ? processedName : $"$({processedName})";
         }
     }
