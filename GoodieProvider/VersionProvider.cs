@@ -107,15 +107,19 @@ namespace GoodieProvider
                 var name = reference.Key;
                 if (reference.Value.Count == 1)
                 {
-                    if (String.IsNullOrWhiteSpace(reference.Value.Single())) Console.WriteLine($"Warning: Package {name} doesn't specify a version.");
+                    if (String.IsNullOrWhiteSpace(reference.Value.Single())) Console.WriteLine($"Warning: {name} doesn't have a value.");
                     sb.AppendLine($"    <{name}>{reference.Value.Single()}</{name}>");
                 }
                 else
                 {
                     foreach (var value in reference.Value)
                     {
-                        Console.WriteLine($"Warning: Package {name} is referenced by multiple versions: {value}");
-                        if (String.IsNullOrWhiteSpace(value)) Console.WriteLine($"Warning: Package {name} doesn't specify a version.");
+                        if (String.IsNullOrWhiteSpace(value))
+                            Console.WriteLine($"Warning: {name} has multiple values, one of which is empty.");
+                        else
+                            Console.WriteLine($"Warning: {name} has multiple values: {value}");
+
+                        // Add all versions to the output file, developer needs to resolve this manually.
                         sb.AppendLine($"    <{name}>{value}</{name}>");
                     }
                 }

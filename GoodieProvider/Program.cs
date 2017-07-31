@@ -18,6 +18,8 @@ namespace GoodieProvider
             var sourcePath = args[0].Trim().TrimEnd('\\');
 
             new VersionProvider().ProcessAllProjects(sourcePath);
+
+            Console.WriteLine("Press any key to exit...");
             Console.ReadLine();
         }
     }
