@@ -97,7 +97,7 @@ namespace ProjectTransformer
                         Generator = generator,
                         LastGenOutput = lastGenOutput,
                         LogicalName = logicalName,
-                        ManifestResourceName = manifestResourceName
+                        ManifestResourceName = manifestResourceName,
                     });
                 }
                 foreach (var projectReference in group.Elements().Where(e => e.Name.LocalName == "ProjectReference"))
@@ -147,11 +147,13 @@ namespace ProjectTransformer
             {
                 var assemblyName = group.GetValue("AssemblyName");
                 var rootNamespace = group.GetValue("RootNamespace");
+                var shippingAssembly = group.GetValue("ShippingAssembly");
                 var noWarn = group.GetValue("NoWarn");
                 var AssemblyAttributeClsCompliant = group.GetValue("AssemblyAttributeClsCompliant");
 
                 if (assemblyName != null) data.AssemblyName = assemblyName;
                 if (rootNamespace != null) data.RootNamespace = rootNamespace;
+                if (shippingAssembly != null) data.ShippingAssembly = shippingAssembly;
                 if (noWarn != null) data.NoWarn = noWarn;
                 if (AssemblyAttributeClsCompliant != null) data.AssemblyAttributeClsCompliant = AssemblyAttributeClsCompliant;
             }
@@ -183,6 +185,7 @@ namespace ProjectTransformer
     <TargetFramework>net46</TargetFramework>");
 
             sb.AppendPropertyIfSet(projectData.RootNamespace, nameof(projectData.RootNamespace));
+            sb.AppendPropertyIfSet(projectData.ShippingAssembly, nameof(projectData.ShippingAssembly));
             sb.AppendPropertyIfSet(projectData.NoWarn, nameof(projectData.NoWarn));
             sb.AppendPropertyIfSet(projectData.AssemblyAttributeClsCompliant, nameof(projectData.AssemblyAttributeClsCompliant));
 
@@ -205,7 +208,26 @@ namespace ProjectTransformer
                 sb.AppendLine("  <ItemGroup>");
                 foreach (var packageReference in projectData.NuGetReferences)
                 {
-                    sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                    if (packageReference.Name.Contains("Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions"))
+                    {
+                        //ignore it
+                    }
+                    else if (packageReference.Name.Contains("Microsoft.VisualStudio.QualityTools.UnitTestFramework") ||
+                        packageReference.Name.Contains("Microsoft.VisualStudio.TestPlatform.TestFramework"))
+                    {
+                        sb.AppendLine(@"    <PackageReference Include=""MSTest.TestAdapter"" Version=""1.1.18"" />
+    <PackageReference Include=""MSTest.TestFramework"" Version=""1.1.18"" /> ");
+                    }
+                    else if (packageReference.Name.Contains("Microsoft.VisualStudio.QualityTools.MockObjectFramework"))
+                    {
+                        sb.AppendLine($@"    <Reference Include=""Microsoft.VisualStudio.QualityTools.MockObjectFramework"">
+      <HintPath>{pathToRoot}..\lib\MOF\Microsoft.VisualStudio.QualityTools.MockObjectFramework.dll</HintPath>
+    </Reference> ");
+                    }
+                    else
+                    {
+                        sb.AppendLine($@"    <PackageReference Include=""{packageReference.Name}"" Version=""{packageReference.Version}"" />");
+                    }
                 }
                 sb.AppendLine("  </ItemGroup>");
             }
@@ -239,6 +261,7 @@ namespace ProjectTransformer
                 foreach (var resource in projectData.ResourceFiles)
                 {
                     sb.AppendLine($@"    <EmbeddedResource Update=""{resource.ResX}"">");
+
                     if (!string.IsNullOrEmpty(resource.Generator))
                     {
                         sb.AppendLine($@"      <Generator>{resource.Generator}</Generator>");
@@ -272,7 +295,7 @@ namespace ProjectTransformer
                         sb.AppendLine($@"    <Compile Update=""{resource.LastGenOutput}"">");
                         sb.AppendLine($@"      <DesignTime>true</DesignTime>");
                         sb.AppendLine($@"      <AutoGen>true</AutoGen>");
-                        sb.AppendLine($@"      <DependentUpon>{resource.ResX}""</DependentUpon>");
+                        sb.AppendLine($@"      <DependentUpon>{resource.ResX}</DependentUpon>");
                         sb.AppendLine($@"    </Compile>");
                     }
                 }
