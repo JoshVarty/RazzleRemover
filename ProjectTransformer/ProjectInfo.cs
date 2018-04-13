@@ -8,6 +8,7 @@ namespace ProjectTransformer
     {
         public string AssemblyName { get; set; }
         public string RootNamespace { get; set; }
+        public string ShippingAssembly { get; set; }
         public string NoWarn { get; set; }
         public IList<string> ProjectReferences { get; } = new List<string>();
         public IList<ExternalReference> NuGetReferences { get; } = new List<ExternalReference>();
@@ -30,6 +31,8 @@ namespace ProjectTransformer
             public string ResX { get; set; }
             public string Generator { get; set; }
             public string LastGenOutput { get; set; }
+            public string LogicalName { get; set; }
+            public string ManifestResourceName { get; set; }
         }
     }
 }
