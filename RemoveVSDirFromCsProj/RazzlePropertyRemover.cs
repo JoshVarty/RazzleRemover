@@ -80,9 +80,9 @@ namespace RazzleRemover
                 },
             };
 
-        public RazzlePropertyRemover(string root = @"C:\git\VS")
+        public RazzlePropertyRemover(string root = @"d:\temp")
         {
-            PlatformPath = Path.Combine(root, @"src\Platform");
+            PlatformPath = Path.Combine(root, @"Platform");
 
             //Only find the .csproj's we're interested in.
             var csprojs = Directory.GetFiles(PlatformPath, "*.csproj", SearchOption.AllDirectories);

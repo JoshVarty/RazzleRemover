@@ -12,7 +12,7 @@ namespace RazzleRemover
     {
         static void Main(string[] args)
         {
-            string repoPath = @"C:\git\vsc";
+            string repoPath = @"d:\temp";
             //var usingRemove = new PlatformUsingRemover();
             //usingRemove.FixUsings();
             //FindProjectUsing();
