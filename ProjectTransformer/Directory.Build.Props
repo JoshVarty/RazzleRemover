@@ -1,0 +1,18 @@
+<Project>
+  <!-- msbuild TextData.csproj /t:tool /v:m -->
+
+  <!-- Removes the default System references that were not listed in .csproj -->
+  <PropertyGroup>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+  </PropertyGroup>
+
+  <Target Name="Tool">
+    <Message Importance="high" Text="AssemblyName:$(AssemblyName)" />
+    <Message Importance="high" Text="RootNamespace:$(RootNamespace)" />
+    <Message Importance="high" Text="NoWarn:$(NoWarn)" />
+    <Message Importance="high" Text="ProjectReferences:@(ProjectReference)" />
+    <Message Importance="high" Text="Reference:@(Reference), HintPath=%(Reference.HintPath)" />
+    <!-- Note: @(None) and @(EmbeddedResource) are read from the .csproj by Xml reader -->
+  </Target>
+
+</Project>
